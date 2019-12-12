@@ -29,7 +29,7 @@ public class MoveBehaviour : MonoBehaviour
             if (timeRemaining <= 0)
             {
                 transform.position = targetPosition;
-                GetComponent<SpriteRenderer>().sortingOrder = targetSortingOrder;
+                GetComponent<CardBehaviour>().SetOrder(targetSortingOrder);
                 enabled = false;
                 if (onMoveComplete != null)
                 {

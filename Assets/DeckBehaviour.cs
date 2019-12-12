@@ -27,12 +27,12 @@ public class DeckBehaviour : MonoBehaviour
             CardBehaviour card = Instantiate<CardBehaviour>(cardPrefab);
             card.transform.parent = transform;
             card.transform.localPosition = Vector3.zero;
+            card.SetOrder(n++);
             int cardIndex = random.Next(0, cards.Count);
             card.card = cards[cardIndex];
             cards.RemoveAt(cardIndex);
             card.gameObject.name = card.card.ToString();
-            card.SetFaceUp(false);
-            card.GetComponent<SpriteRenderer>().sortingOrder = n++;
+            card.faceUp = false;
         }
     }
 
@@ -49,7 +49,7 @@ public class DeckBehaviour : MonoBehaviour
 
     public void FlipCardOver(CardBehaviour card)
     {
-        card.GetComponent<SpriteRenderer>().sortingOrder = 100;
+        card.SetOrder(100);
         card.GetComponent<MoveBehaviour>().MoveTo(cardTarget.transform.position, .1f, cardTarget.transform.parent.childCount);
         card.transform.parent = cardTarget.transform.parent;
         card.SetFaceUp(true);

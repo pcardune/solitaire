@@ -2,48 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CardSuit
-{
-    CLUBS,
-    HEARTS,
-    DIAMONDS,
-    SPADES,
-}
 
-public enum CardColor
-{
-    RED,
-    BLACK
-}
-
-[System.Serializable]
-public struct Card
-{
-    public CardSuit suit;
-    private CardColor color;
-
-    [Range(1, 13)]
-    public int value;
-
-    public Card(CardSuit aSuit, int aValue)
-    {
-        suit = aSuit;
-        value = aValue;
-        if (suit == CardSuit.SPADES || suit == CardSuit.CLUBS)
-        {
-            color = CardColor.BLACK;
-        }
-        else
-        {
-            color = CardColor.RED;
-        }
-    }
-
-    override public string ToString()
-    {
-        return suit.ToString() + value;
-    }
-}
 
 public class CardSpriteManager
 {
@@ -97,7 +56,19 @@ public class CardBehaviour : MonoBehaviour
 {
     public Card card;
 
+    public Location? cardLocation;
+
+    public SolitaireGameBehaviour solitaireGameBehaviour;
+
     public bool faceUp = true;
+
+    SpriteRenderer spriteRenderer;
+
+    void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+
+    }
 
     void Start()
     {
@@ -110,28 +81,43 @@ public class CardBehaviour : MonoBehaviour
 
     }
 
+    public void SetOrder(int layer)
+    {
+        spriteRenderer.sortingOrder = layer;
+        transform.position = new Vector3(transform.position.x, transform.position.y, -layer * .01f);
+    }
+
+    public int GetOrder()
+    {
+        return spriteRenderer.sortingOrder;
+    }
+
     public void SetFaceUp(bool isFaceUp)
     {
         faceUp = isFaceUp;
-        SpriteRenderer sr = GetComponent<SpriteRenderer>();
         if (faceUp)
         {
-            sr.sprite = CardSpriteManager.Load().GetSpriteForCard(card);
+            spriteRenderer.sprite = CardSpriteManager.Load().GetSpriteForCard(card);
         }
         else
         {
-            sr.sprite = CardSpriteManager.Load().GetFaceDownSprite();
+            spriteRenderer.sprite = CardSpriteManager.Load().GetFaceDownSprite();
         }
     }
 
     void OnMouseUpAsButton()
     {
-        DeckBehaviour deck = GetComponentInParent<DeckBehaviour>();
-        if (deck != null)
-        {
-            deck.FlipCardOver(this);
-        }
-        Debug.Log("You clicked me! " + card.ToString());
+        solitaireGameBehaviour.OnClickCard(this);
+    }
+
+    void OnMouseDown()
+    {
+        solitaireGameBehaviour.OnMouseDownCard(this);
+    }
+
+    void OnMouseUp()
+    {
+        solitaireGameBehaviour.OnMouseUpCard(this);
     }
 
 }
