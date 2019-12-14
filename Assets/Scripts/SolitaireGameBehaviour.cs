@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SolitaireGameBehaviour : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public GameObject cardTargetPrefab;
     public GameObject lineRendererPrefab;
     Solitaire solitaire;
+
+    public Text GameStatsText;
 
     public Vector3 TableauPosition;
     public Vector3 StockPilePosition;
@@ -194,7 +197,13 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             AnimateMove(move);
             UpdatePossibleMoveLines();
+            UpdateGameStats();
         }
+    }
+
+    void UpdateGameStats()
+    {
+        GameStatsText.text = "Moves: " + solitaire.moveHistory.Count;
     }
 
     void UpdatePossibleMoveLines()

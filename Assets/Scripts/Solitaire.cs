@@ -151,6 +151,8 @@ public class Solitaire
 
     List<CardMovement> possibleMovesCache;
 
+    public List<CardMovement> moveHistory = new List<CardMovement>();
+
     public Solitaire()
     {
         for (int i = 0; i < 4; i++)
@@ -319,6 +321,7 @@ public class Solitaire
         if (success)
         {
             possibleMovesCache = null;
+            moveHistory.Add(move);
         }
         else
         {
