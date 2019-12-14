@@ -205,7 +205,16 @@ public class Solitaire
                     moves.Add(move);
                 }
             }
-            if (source.PileType != PileType.FOUNDATION)
+            bool maybeFoundation = true;
+            if (source.PileType == PileType.FOUNDATION)
+            {
+                maybeFoundation = false;
+            }
+            if (source.PileType == PileType.TABLEAU && tableau.piles[source.PileIndex].GetNextCardLocation().Order - 1 != source.Order)
+            {
+                maybeFoundation = false;
+            }
+            if (maybeFoundation)
             {
                 foreach (var pile in foundations)
                 {
