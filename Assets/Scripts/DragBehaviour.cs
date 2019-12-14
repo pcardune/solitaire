@@ -27,27 +27,24 @@ public class DragBehaviour : MonoBehaviour
 
     void OnMouseDown()
     {
-        Debug.Log("OnMouseDown");
+        // Debug.Log("OnMouseDown");
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         initialPosition = transform.position;
         dragOffset = transform.position - mousePosition;
         originalColor = spriteRenderer.color;
         spriteRenderer.color = dragColor;
-        initialOrder = GetComponent<CardBehaviour>().GetOrder();
-        GetComponent<CardBehaviour>().SetOrder(100);
     }
 
     void OnMouseDrag()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         transform.position = mousePosition + dragOffset;
-        Debug.Log("OnMouseDrag");
+        // Debug.Log("OnMouseDrag");
     }
 
     void OnMouseUp()
     {
         spriteRenderer.color = originalColor;
         transform.position = initialPosition;
-        GetComponent<CardBehaviour>().SetOrder(initialOrder);
     }
 }
