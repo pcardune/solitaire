@@ -11,6 +11,7 @@ public class MoveLineBehaviour : MonoBehaviour
 
     ArrowBehaviour arrow;
 
+    public bool Highlight = false;
 
     // Start is called before the first frame update
     void Start()
@@ -26,6 +27,15 @@ public class MoveLineBehaviour : MonoBehaviour
         var end = solitaireGameBehaviour.GetPositionForCardLocation(Move.Destination) + new Vector3(0, 0, -1);
         arrow.StartPos = start;
         arrow.EndPos = end;
+
+        if (Highlight)
+        {
+            arrow.SetColor(Color.red);
+        }
+        else
+        {
+            arrow.SetColor(Color.yellow);
+        }
     }
 
     public void SetMove(CardMovement move)

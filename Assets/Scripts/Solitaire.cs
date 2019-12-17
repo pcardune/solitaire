@@ -176,6 +176,7 @@ public class Solitaire
     public List<FoundationPile> foundations = new List<FoundationPile>();
 
     List<CardMovement> possibleMovesCache;
+    CardMovement randomMoveCache;
 
     public List<CardMovement> moveHistory = new List<CardMovement>();
 
@@ -295,6 +296,16 @@ public class Solitaire
         return possibleMovesCache;
     }
 
+    public CardMovement GetRandomMove(System.Random random)
+    {
+        if (randomMoveCache == null)
+        {
+            var moves = GetAllPossibleMoves();
+            randomMoveCache = moves[random.Next(0, moves.Count)];
+        }
+        return randomMoveCache;
+    }
+
     public bool MaybePerformMove(CardMovement move)
     {
         if (move.Type == MoveType.StockPileReset)
@@ -363,6 +374,7 @@ public class Solitaire
         if (success)
         {
             possibleMovesCache = null;
+            randomMoveCache = null;
             moveHistory.Add(move);
         }
         else

@@ -28,4 +28,12 @@ public class ArrowBehaviour : MonoBehaviour
         Tip.position = EndPos;
         Line.rotation = Tip.rotation = transform.rotation = Quaternion.FromToRotation(Vector3.up, EndPos - StartPos);
     }
+
+    public void SetColor(Color color)
+    {
+        foreach (var sr in GetComponentsInChildren<SpriteRenderer>())
+        {
+            sr.color = color;
+        }
+    }
 }

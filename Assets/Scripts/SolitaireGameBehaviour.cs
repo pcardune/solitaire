@@ -39,6 +39,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public bool debugPossibleMoves = false;
     List<MoveLineBehaviour> possibleMoveLines = new List<MoveLineBehaviour>();
 
+    public float moveDuration = .1f;
+
     Queue<CardMovement> moveQueue = new Queue<CardMovement>();
     public GameState state = GameState.Init;
 
@@ -126,14 +128,15 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 cardBeingMoved = cards[solitaire.stockPile.stock[i].Id];
                 cardBeingMoved.SetFaceUp(false);
                 cardBeingMoved.cardLocation = new Location(PileType.STOCK, 0, i, false);
-                cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation), .1f, cardBeingMoved.cardLocation.Order);
+                cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation), moveDuration, cardBeingMoved.cardLocation.Order);
             }
         }
-        else
+        else if (move.Type == MoveType.SingleCard)
         {
             cardBeingMoved = cards[move.Card.Id];
+            cardBeingMoved.transform.parent = null;
             cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
-            cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), .5f, move.Destination.Order);
+            cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), moveDuration, move.Destination.Order);
             cardBeingMoved.cardLocation = move.Destination;
 
             if (move.Destination.PileType == PileType.TABLEAU)
@@ -263,14 +266,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void MakeRandomMove()
     {
-        MakeRandomMoveAsync();
-    }
-
-    public void MakeRandomMoveAsync()
-    {
-        var moves = solitaire.GetAllPossibleMoves();
-
-        var move = moves[random.Next(0, moves.Count)];
+        var move = solitaire.GetRandomMove(random);
         Debug.Log("Performing random move: " + move);
         PerformAndAnimateMove(move);
     }
@@ -304,6 +300,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         if (debugPossibleMoves)
         {
             var moves = solitaire.GetAllPossibleMoves();
+            var randomMove = solitaire.GetRandomMove(random);
             var s = "Found the following possible moves:\n";
             for (int i = 0; i < moves.Count; i++)
             {
@@ -327,6 +324,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 }
                 line.gameObject.SetActive(true);
                 line.SetMove(move);
+                line.Highlight = move == randomMove;
                 lineIndex++;
             }
             for (; lineIndex < possibleMoveLines.Count; lineIndex++)
