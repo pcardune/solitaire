@@ -19,6 +19,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public GameObject lineRendererPrefab;
     Solitaire solitaire;
 
+    public Text winText;
+
     public Text GameStatsText;
 
     public Vector3 TableauPosition;
@@ -201,6 +203,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
             if (justFinishedMovingCard != null)
             {
                 Validate();
+                if (solitaire.IsGameOver())
+                {
+                    winText.gameObject.SetActive(true);
+                }
             }
             if (cardBeingMoved == null)
             {

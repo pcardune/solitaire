@@ -424,4 +424,20 @@ public class Solitaire
         return json;
     }
 
+    public bool IsGameOver()
+    {
+        if (stockPile.stock.Count + stockPile.waste.Count > 0)
+        {
+            return false;
+        }
+        foreach (var pile in tableau.piles)
+        {
+            if (pile.faceUpCards.Count + pile.faceDownCards.Count > 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
