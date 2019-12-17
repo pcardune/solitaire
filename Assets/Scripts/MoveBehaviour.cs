@@ -5,10 +5,14 @@ using UnityEngine;
 
 public class MoveBehaviour : MonoBehaviour
 {
-    public delegate void OnMoveComplete();
-
-    bool isMoving = false;
     float timeRemaining = 0f;
+    public bool IsMoving
+    {
+        get
+        {
+            return timeRemaining > 0;
+        }
+    }
     Vector3 targetPosition;
     int targetSortingOrder;
     TaskCompletionSource<MoveBehaviour> moveCompletion;

@@ -24,12 +24,16 @@ public class SolitaireGameBehaviour : MonoBehaviour
     Dictionary<string, CardBehaviour> cards = new Dictionary<string, CardBehaviour>();
 
     List<GameObject> cardTargets = new List<GameObject>();
-
+    public bool AutoPlay = false;
+    public int MaxAutoPlayMoves = 1000;
+    CardBehaviour cardBeingMoved;
     System.Random random;
 
     public int randomSeed = 1;
     public bool debugPossibleMoves = false;
     List<MoveLineBehaviour> possibleMoveLines = new List<MoveLineBehaviour>();
+
+    Queue<CardMovement> moveQueue;
 
     // Start is called before the first frame update
     void Start()
@@ -109,10 +113,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     async Task AnimateMove(CardMovement move)
     {
-        CardBehaviour cardToMove = cards[move.Card.Id];
-        cardToMove.SetFaceUp(move.Destination.FaceUp);
-        await cardToMove.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), .1f, move.Destination.Order);
-        cardToMove.cardLocation = move.Destination;
+        cardBeingMoved = cards[move.Card.Id];
+        cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
+        await cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), .1f, move.Destination.Order);
+        cardBeingMoved.cardLocation = move.Destination;
 
         if (move.Destination.PileType == PileType.TABLEAU)
         {
@@ -120,9 +124,19 @@ public class SolitaireGameBehaviour : MonoBehaviour
             if (pile.faceUpCards.Count > 1)
             {
                 var parentCard = cards[pile.faceUpCards[pile.faceUpCards.Count - 2].Id];
-                cardToMove.transform.parent = parentCard.transform;
-                Debug.Log("Setting parent of " + cardToMove.name + " to " + parentCard.name);
+                cardBeingMoved.transform.parent = parentCard.transform;
+                Debug.Log("Setting parent of " + cardBeingMoved.name + " to " + parentCard.name);
             }
+            // update location for all child cards
+            // var childCard = cardBeingMoved.GetComponentInChildren<CardBehaviour>();
+            // var childLocation = cardBeingMoved.cardLocation;
+            // int i = 0;
+            // while (childCard != null && i++ < 10)
+            // {
+            //     childLocation.Order++;
+            //     childCard.cardLocation = childLocation;
+            //     childCard = childCard.GetComponentInChildren<CardBehaviour>();
+            // }
         }
         if (move.Source.PileType == PileType.TABLEAU)
         {
@@ -138,6 +152,25 @@ public class SolitaireGameBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (cardBeingMoved == null)
+        {
+            if (AutoPlay && solitaire.moveHistory.Count < MaxAutoPlayMoves)
+            {
+                MakeRandomMove();
+            }
+        }
+        else
+        {
+            if (cardBeingMoved.GetComponent<MoveBehaviour>().IsMoving)
+            {
+                // keep waiting... I guess?
+            }
+            else
+            {
+                cardBeingMoved = null;
+            }
+        }
+
 
     }
 
@@ -183,12 +216,9 @@ public class SolitaireGameBehaviour : MonoBehaviour
         isDraggingCard = false;
     }
 
-    public async void AutoPlay()
+    public void ToggleAutoPlay()
     {
-        for (int i = 0; i < 1000; i++)
-        {
-            await MakeRandomMoveAsync();
-        }
+        AutoPlay = !AutoPlay;
     }
 
     public void MakeRandomMove()
