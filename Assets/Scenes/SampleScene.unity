@@ -903,6 +903,83 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 936137443}
   m_CullTransparentMesh: 0
+--- !u!1 &979521365
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 979521366}
+  - component: {fileID: 979521368}
+  - component: {fileID: 979521367}
+  m_Layer: 5
+  m_Name: YouWinText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &979521366
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979521365}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1097809564}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &979521367
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979521365}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_FontSize: 300
+    m_FontStyle: 1
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 300
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: You won!
+--- !u!222 &979521368
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979521365}
+  m_CullTransparentMesh: 0
 --- !u!1 &1056343832
 GameObject:
   m_ObjectHideFlags: 0
@@ -1066,6 +1143,7 @@ RectTransform:
   - {fileID: 936137444}
   - {fileID: 396894644}
   - {fileID: 482614439}
+  - {fileID: 979521366}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1671,16 +1749,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cardPrefab: {fileID: 112351596966055077, guid: cfe86bd2fd714dd4a8ac37fbe68f645e,
     type: 3}
-  cardTargetPrefab: {fileID: 6505724599775410159, guid: 40404bdef89767845b6461569541e4cb,
+  cardTargetPrefab: {fileID: 5030157732150163690, guid: 40404bdef89767845b6461569541e4cb,
     type: 3}
   lineRendererPrefab: {fileID: 8219201696645898152, guid: b585b55bad5596245842de7d6fbebc22,
     type: 3}
+  winText: {fileID: 979521367}
   GameStatsText: {fileID: 1314470908}
   TableauPosition: {x: -4.77, y: 1.08, z: 0}
   StockPilePosition: {x: 4.73, y: 3.28, z: 0}
   CardDimensions: {x: 1.38, y: 1.88}
   CardSpacing: {x: 0.21, y: -0.36}
   FoundationPilePosition: {x: -4.76, y: 3.31, z: 0}
+  selectedCardTarget: {fileID: 0}
   AutoPlay: 0
   MaxAutoPlayMoves: 43
   randomSeed: 1

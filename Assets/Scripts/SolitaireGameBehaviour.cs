@@ -15,7 +15,7 @@ public enum GameState
 public class SolitaireGameBehaviour : MonoBehaviour
 {
     public CardBehaviour cardPrefab;
-    public GameObject cardTargetPrefab;
+    public CardTarget cardTargetPrefab;
     public GameObject lineRendererPrefab;
     Solitaire solitaire;
 
@@ -31,7 +31,21 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     Dictionary<string, CardBehaviour> cards = new Dictionary<string, CardBehaviour>();
 
-    List<GameObject> cardTargets = new List<GameObject>();
+    List<CardTarget> cardTargets = new List<CardTarget>();
+    public CardTarget SelectedCardTarget
+    {
+        get
+        {
+            foreach (var target in cardTargets)
+            {
+                if (target.IsSelected)
+                {
+                    return target;
+                }
+            }
+            return null;
+        }
+    }
     public bool AutoPlay = false;
     public int MaxAutoPlayMoves = 1000;
     CardBehaviour cardBeingMoved;
@@ -45,6 +59,13 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     Queue<CardMovement> moveQueue = new Queue<CardMovement>();
     public GameState state = GameState.Init;
+
+    public static SolitaireGameBehaviour Instance { get; private set; }
+
+    void Awake()
+    {
+        SolitaireGameBehaviour.Instance = this;
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -227,11 +248,29 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         var location = cardBehaviour.cardLocation;
         var card = cardBehaviour.card;
-        var moves = solitaire.GetPossibleMovesForCard(card, location);
-        if (moves.Count > 0)
+        CardMovement move = null;
+        if (SelectedCardTarget == null)
         {
-            PerformAndAnimateMove(moves[0]);
+            var moves = solitaire.GetPossibleMovesForCard(card, location);
+            if (moves.Count > 0 && cardBehaviour.Drag.DragDuration < 0.5f)
+            {
+                move = moves[0];
+            }
+
         }
+        else
+        {
+            move = new CardMovement(card, location, SelectedCardTarget.cardLocation);
+        }
+        if (move != null)
+        {
+            PerformAndAnimateMove(move);
+        }
+        else
+        {
+            cardBehaviour.Drag.Reset();
+        }
+
     }
 
     bool isDraggingCard = false;
@@ -248,9 +287,13 @@ public class SolitaireGameBehaviour : MonoBehaviour
             var moves = solitaire.GetPossibleMovesForCard(cardBehaviour.card, cardBehaviour.cardLocation);
             foreach (var move in moves)
             {
-                var target = Instantiate(cardTargetPrefab);
-                target.transform.position = GetPositionForCardLocation(move.Destination);
-                cardTargets.Add(target);
+                var cardTarget = Instantiate(
+                    cardTargetPrefab,
+                    GetPositionForCardLocation(move.Destination),
+                    Quaternion.identity
+                );
+                cardTarget.cardLocation = move.Destination;
+                cardTargets.Add(cardTarget);
             }
             isDraggingCard = true;
         }
@@ -260,8 +303,9 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         foreach (var target in cardTargets)
         {
-            Destroy(target);
+            Destroy(target.gameObject);
         }
+        cardTargets.Clear();
         isDraggingCard = false;
     }
 

@@ -70,6 +70,14 @@ public class CardBehaviour : MonoBehaviour
     SpriteRenderer spriteRenderer;
     DragBehaviour dragBehaviour;
 
+    public DragBehaviour Drag
+    {
+        get
+        {
+            return dragBehaviour;
+        }
+    }
+
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();

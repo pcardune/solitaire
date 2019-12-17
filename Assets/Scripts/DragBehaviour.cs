@@ -52,8 +52,7 @@ public class DragBehaviour : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
     }
@@ -81,13 +80,19 @@ public class DragBehaviour : MonoBehaviour
             _dragStartTime = Time.time;
         }
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        transform.position = mousePosition + dragOffset;
+        var position = mousePosition + dragOffset;
+        position.z = -1f;
+        transform.position = position;
     }
 
     void OnMouseUp()
     {
         IsDragging = false;
         spriteRenderer.color = originalColor;
+    }
+
+    public void Reset()
+    {
         transform.position = initialPosition;
     }
 }
