@@ -6,6 +6,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
 
+public enum GameState
+{
+    Init,
+    Dealing,
+    Playing,
+}
 public class SolitaireGameBehaviour : MonoBehaviour
 {
     public CardBehaviour cardPrefab;
@@ -33,7 +39,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public bool debugPossibleMoves = false;
     List<MoveLineBehaviour> possibleMoveLines = new List<MoveLineBehaviour>();
 
-    Queue<CardMovement> moveQueue;
+    Queue<CardMovement> moveQueue = new Queue<CardMovement>();
+    public GameState state = GameState.Init;
 
     // Start is called before the first frame update
     void Start()
@@ -54,7 +61,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
             i++;
         }
         Validate();
-        DealCards();
     }
 
     public Vector3 GetPositionForCardLocation(Location location)
@@ -102,41 +108,36 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
     }
 
-    public async void DealCards()
+    public void DealCards()
     {
+        state = GameState.Dealing;
         foreach (var move in solitaire.Deal())
         {
-            await AnimateMove(move);
-            Validate();
+            moveQueue.Enqueue(move);
         }
     }
 
-    async Task AnimateMove(CardMovement move)
+    void AnimateMove(CardMovement move)
     {
         cardBeingMoved = cards[move.Card.Id];
         cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
-        await cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), .1f, move.Destination.Order);
+        cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), .1f, move.Destination.Order);
         cardBeingMoved.cardLocation = move.Destination;
 
         if (move.Destination.PileType == PileType.TABLEAU)
         {
             var pile = solitaire.tableau.piles[move.Destination.PileIndex];
-            if (pile.faceUpCards.Count > 1)
+            int order = pile.faceDownCards.Count + 1;
+            for (int i = 1; i < pile.faceUpCards.Count; i++)
             {
-                var parentCard = cards[pile.faceUpCards[pile.faceUpCards.Count - 2].Id];
-                cardBeingMoved.transform.parent = parentCard.transform;
-                Debug.Log("Setting parent of " + cardBeingMoved.name + " to " + parentCard.name);
+                var cardBehaviour = cards[pile.faceUpCards[i].Id];
+                var location = move.Destination;
+                location.Order = order;
+                cardBehaviour.cardLocation = location;
+                order++;
+                var parentCard = cards[pile.faceUpCards[i - 1].Id];
+                cardBehaviour.transform.parent = parentCard.transform;
             }
-            // update location for all child cards
-            // var childCard = cardBeingMoved.GetComponentInChildren<CardBehaviour>();
-            // var childLocation = cardBeingMoved.cardLocation;
-            // int i = 0;
-            // while (childCard != null && i++ < 10)
-            // {
-            //     childLocation.Order++;
-            //     childCard.cardLocation = childLocation;
-            //     childCard = childCard.GetComponentInChildren<CardBehaviour>();
-            // }
         }
         if (move.Source.PileType == PileType.TABLEAU)
         {
@@ -152,26 +153,51 @@ public class SolitaireGameBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (cardBeingMoved == null)
+        CardBehaviour justFinishedMovingCard = null;
+        if (cardBeingMoved != null && !cardBeingMoved.GetComponent<MoveBehaviour>().IsMoving)
         {
-            if (AutoPlay && solitaire.moveHistory.Count < MaxAutoPlayMoves)
-            {
-                MakeRandomMove();
-            }
+            justFinishedMovingCard = cardBeingMoved;
+            cardBeingMoved = null;
         }
-        else
+
+        if (state == GameState.Init)
         {
-            if (cardBeingMoved.GetComponent<MoveBehaviour>().IsMoving)
+            DealCards();
+        }
+        if (state == GameState.Dealing)
+        {
+            if (moveQueue.Count > 0)
             {
-                // keep waiting... I guess?
+                if (cardBeingMoved == null)
+                {
+                    AnimateMove(moveQueue.Dequeue());
+                }
             }
             else
             {
-                cardBeingMoved = null;
+                Validate();
+                state = GameState.Playing;
             }
         }
-
-
+        if (state == GameState.Playing)
+        {
+            if (justFinishedMovingCard != null)
+            {
+                Validate();
+            }
+            if (cardBeingMoved == null)
+            {
+                if (moveQueue.Count > 0)
+                {
+                    var nextMove = moveQueue.Dequeue();
+                    AnimateMove(nextMove);
+                }
+                else if (AutoPlay && solitaire.moveHistory.Count < MaxAutoPlayMoves)
+                {
+                    MakeRandomMove();
+                }
+            }
+        }
     }
 
     public void OnClickCard(CardBehaviour cardBehaviour)
@@ -226,23 +252,22 @@ public class SolitaireGameBehaviour : MonoBehaviour
         MakeRandomMoveAsync();
     }
 
-    public async Task MakeRandomMoveAsync()
+    public void MakeRandomMoveAsync()
     {
         var moves = solitaire.GetAllPossibleMoves();
 
         var move = moves[random.Next(0, moves.Count)];
         Debug.Log("Performing random move: " + move);
-        await PerformAndAnimateMove(move);
+        PerformAndAnimateMove(move);
     }
 
-    public async Task PerformAndAnimateMove(CardMovement move)
+    public void PerformAndAnimateMove(CardMovement move)
     {
         if (solitaire.PerformMove(move))
         {
-            await AnimateMove(move);
+            moveQueue.Enqueue(move);
             UpdatePossibleMoveLines();
             UpdateGameStats();
-            Validate();
         }
     }
 
@@ -329,18 +354,18 @@ public class SolitaireGameBehaviour : MonoBehaviour
             foreach (var card in pile.Cards)
             {
                 var location = cards[card.Id].cardLocation;
-                AssertIsTrue(location.PileType == PileType.FOUNDATION, "Wrong Pile: " + location.PileType);
-                AssertIsTrue(location.PileIndex == pileIndex, "Wrong pile index");
-                AssertIsTrue(location.FaceUp == true, "Cards in foundation should all be face up.");
-                AssertIsTrue(location.Order == order, "Cards should be in the correct order.");
+                AssertIsTrue(location.PileType == PileType.FOUNDATION, $"{card}: Wrong Pile: {location.PileType}");
+                AssertIsTrue(location.PileIndex == pileIndex, $"{card}: Wrong pile index");
+                AssertIsTrue(location.FaceUp == true, $"{card}: Cards in foundation should all be face up.");
+                AssertIsTrue(location.Order == order, $"{card}: Cards should be in the correct order.");
                 if (order == 0)
                 {
-                    AssertIsTrue(card.Rank == Rank.ACE, "First card in foundation pile must be an ace.");
+                    AssertIsTrue(card.Rank == Rank.ACE, $"{card}: First card in foundation pile must be an ace.");
                 }
                 if (lastCard.HasValue)
                 {
-                    AssertIsTrue(card.Suit == lastCard.Value.Suit, "Cards in foundation pile should all have the same suit.");
-                    AssertIsTrue(card.Rank == lastCard.Value.Rank + 1, "Cards in foundation pile should go up in rank by 1 each time.");
+                    AssertIsTrue(card.Suit == lastCard.Value.Suit, $"{card}: Cards in foundation pile should all have the same suit.");
+                    AssertIsTrue(card.Rank == lastCard.Value.Rank + 1, $"{card}: Cards in foundation pile should go up in rank by 1 each time.");
                 }
                 lastCard = card;
                 order++;
@@ -355,24 +380,24 @@ public class SolitaireGameBehaviour : MonoBehaviour
             foreach (var card in pile.faceDownCards)
             {
                 var location = cards[card.Id].cardLocation;
-                AssertIsTrue(location.PileType == PileType.TABLEAU, "Wrong Pile");
-                AssertIsTrue(location.PileIndex == pileIndex, "Wrong pile index");
-                AssertIsTrue(location.FaceUp == false, "Cards in tableau facedown pile should all be face down.");
-                AssertIsTrue(location.Order == order, $"Card {card} should be in the correct order: {order} (was {location.Order}).");
+                AssertIsTrue(location.PileType == PileType.TABLEAU, $"{card}: Wrong Pile. Expected: {PileType.TABLEAU} Got: {location.PileType}");
+                AssertIsTrue(location.PileIndex == pileIndex, $"{card}: Wrong pile index");
+                AssertIsTrue(location.FaceUp == false, $"{card}: Cards in tableau facedown pile should all be face down.");
+                AssertIsTrue(location.Order == order, $"{card}: should be in the correct order: {order} (was {location.Order}).");
                 order++;
             }
             Card? lastCard = null;
             foreach (var card in pile.faceUpCards)
             {
                 var location = cards[card.Id].cardLocation;
-                AssertIsTrue(location.PileType == PileType.TABLEAU, "Wrong Pile");
-                AssertIsTrue(location.PileIndex == pileIndex, "Wrong pile index");
-                AssertIsTrue(location.FaceUp == true, "Cards in tableau faceup pile should all be face up.");
-                AssertIsTrue(location.Order == order, $"Card {card} should be in the correct order: {order} (was {location.Order}).");
+                AssertIsTrue(location.PileType == PileType.TABLEAU, $"{card}: Wrong Pile");
+                AssertIsTrue(location.PileIndex == pileIndex, $"{card}: Wrong pile index");
+                AssertIsTrue(location.FaceUp == true, $"{card}: Cards in tableau faceup pile should all be face up.");
+                AssertIsTrue(location.Order == order, $"{card}: should be in the correct order: {order} (was {location.Order}).");
                 if (lastCard.HasValue)
                 {
-                    AssertIsTrue(card.Color != lastCard.Value.Color, "Cards in tableau should alternate colors");
-                    AssertIsTrue(card.Rank == lastCard.Value.Rank - 1, "Cards in tableau pile should go down in rank by 1 each time.");
+                    AssertIsTrue(card.Color != lastCard.Value.Color, $"{card}: Cards in tableau should alternate colors");
+                    AssertIsTrue(card.Rank == lastCard.Value.Rank - 1, $"{card}: Cards in tableau pile should go down in rank by 1 each time.");
                 }
                 lastCard = card;
                 order++;
@@ -385,10 +410,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
             foreach (var card in solitaire.stockPile.waste)
             {
                 var location = cards[card.Id].cardLocation;
-                AssertIsTrue(location.PileType == PileType.WASTE, "Wrong Pile");
-                AssertIsTrue(location.PileIndex == 0, "Wrong pile index");
-                AssertIsTrue(location.FaceUp == true, "Cards in waste pile should all be face up.");
-                AssertIsTrue(location.Order == order, $"Card {card} should be in the correct order: {order} (was {location.Order}).");
+                AssertIsTrue(location.PileType == PileType.WASTE, $"{card}: Wrong Pile");
+                AssertIsTrue(location.PileIndex == 0, $"{card}: Wrong pile index");
+                AssertIsTrue(location.FaceUp == true, $"{card}: Cards in waste pile should all be face up.");
+                AssertIsTrue(location.Order == order, $"{card}: should be in the correct order: {order} (was {location.Order}).");
                 order++;
             }
         }
@@ -398,10 +423,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
             foreach (var card in solitaire.stockPile.stock)
             {
                 var location = cards[card.Id].cardLocation;
-                AssertIsTrue(location.PileType == PileType.STOCK, "Wrong Pile");
-                AssertIsTrue(location.PileIndex == 0, "Wrong pile index");
-                AssertIsTrue(location.FaceUp == false, "Cards in stock pile should all be face down.");
-                AssertIsTrue(location.Order == order, $"Card {card} should be in the correct order: {order} (was {location.Order}).");
+                AssertIsTrue(location.PileType == PileType.STOCK, $"{card}: Wrong Pile");
+                AssertIsTrue(location.PileIndex == 0, $"{card}: Wrong pile index");
+                AssertIsTrue(location.FaceUp == false, $"{card}: Cards in stock pile should all be face down.");
+                AssertIsTrue(location.Order == order, $"{card}: should be in the correct order: {order} (was {location.Order}).");
                 order++;
             }
         }

@@ -15,7 +15,6 @@ public class MoveBehaviour : MonoBehaviour
     }
     Vector3 targetPosition;
     int targetSortingOrder;
-    TaskCompletionSource<MoveBehaviour> moveCompletion;
     // Start is called before the first frame update
     void Start()
     {
@@ -33,21 +32,17 @@ public class MoveBehaviour : MonoBehaviour
             {
                 transform.position = targetPosition;
                 enabled = false;
-                moveCompletion.SetResult(this);
                 Debug.Log("Done moving " + gameObject.name);
             }
         }
     }
 
-    public Task MoveTo(Vector3 position, float aDuration, int sortingOrder)
+    public void MoveTo(Vector3 position, float aDuration, int sortingOrder)
     {
         Debug.Log("Moving " + gameObject.name + " to " + position);
         timeRemaining = aDuration;
         targetPosition = position;
         targetSortingOrder = sortingOrder;
         enabled = true;
-
-        moveCompletion = new TaskCompletionSource<MoveBehaviour>();
-        return moveCompletion.Task;
     }
 }

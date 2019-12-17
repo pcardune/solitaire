@@ -198,7 +198,6 @@ public class Solitaire
                     destination = pile.PushFaceUp(card);
                 }
                 var move = new CardMovement(card, source, destination);
-                Debug.Log("Move: " + move.ToString());
                 yield return move;
             }
         }

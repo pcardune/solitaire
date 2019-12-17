@@ -22,10 +22,8 @@ public class StockPile
 
     public (Card Card, Location Source) PopFromStock()
     {
-        Debug.Log($"Before popping, stock had {stock.Count} cards.");
         var card = stock[stock.Count - 1];
         stock.RemoveAt(stock.Count - 1);
-        Debug.Log($"After popping, stock has {stock.Count} cards");
         return (card, new Location(PileType.STOCK, 0, stock.Count, false));
     }
 
