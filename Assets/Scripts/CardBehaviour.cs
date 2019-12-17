@@ -52,6 +52,7 @@ public class CardSpriteManager
     }
 }
 
+[RequireComponent(typeof(DragBehaviour))]
 public class CardBehaviour : MonoBehaviour
 {
     public Card card;
@@ -62,12 +63,17 @@ public class CardBehaviour : MonoBehaviour
 
     public bool faceUp = true;
 
+    public float dragDelay = 0.5f;
+
+    float dragStart;
+
     SpriteRenderer spriteRenderer;
+    DragBehaviour dragBehaviour;
 
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-
+        dragBehaviour = GetComponent<DragBehaviour>();
     }
 
     void Start()
@@ -106,7 +112,10 @@ public class CardBehaviour : MonoBehaviour
 
     void OnMouseDrag()
     {
-        solitaireGameBehaviour.OnMouseDragCard(this);
+        if (dragBehaviour.DragDuration > 0.1f)
+        {
+            solitaireGameBehaviour.OnMouseDragCard(this);
+        }
     }
 
     void OnMouseUp()

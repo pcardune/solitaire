@@ -13,6 +13,45 @@ public class DragBehaviour : MonoBehaviour
 
     public Color dragColor = new Color(1, 1, 1, .8f);
 
+    private float _dragStartTime;
+
+    private bool _isDragging = false;
+    public bool IsDragging
+    {
+        get
+        {
+            return _isDragging;
+        }
+        private set
+        {
+            _isDragging = value;
+        }
+    }
+
+    public float DragDuration
+    {
+        get
+        {
+            if (IsDragging)
+            {
+                return Time.time - _dragStartTime;
+            }
+            return 0f;
+        }
+    }
+
+    public float DragDistance
+    {
+        get
+        {
+            if (IsDragging)
+            {
+                return dragOffset.magnitude;
+            }
+            return 0f;
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -27,7 +66,6 @@ public class DragBehaviour : MonoBehaviour
 
     void OnMouseDown()
     {
-        // Debug.Log("OnMouseDown");
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         initialPosition = transform.position;
         dragOffset = transform.position - mousePosition;
@@ -37,13 +75,18 @@ public class DragBehaviour : MonoBehaviour
 
     void OnMouseDrag()
     {
+        if (!IsDragging)
+        {
+            IsDragging = true;
+            _dragStartTime = Time.time;
+        }
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         transform.position = mousePosition + dragOffset;
-        // Debug.Log("OnMouseDrag");
     }
 
     void OnMouseUp()
     {
+        IsDragging = false;
         spriteRenderer.color = originalColor;
         transform.position = initialPosition;
     }
