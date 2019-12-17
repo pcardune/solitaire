@@ -29,7 +29,7 @@ public class CardSpriteManager
                     string path = "CardImages/card" + suit.Key + values[i];
                     Card card = new Card(suit.Value, i + 1);
                     Sprite sprite = Resources.Load<Sprite>(path);
-                    Debug.Log("Loaded sprite " + path + ": " + sprite);
+                    // Debug.Log("Loaded sprite " + path + ": " + sprite);
                     CardSpriteManager.instance.cardFrontSprites[card.ToString()] = sprite;
                 }
             }

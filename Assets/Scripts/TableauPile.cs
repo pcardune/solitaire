@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public class TableauPile
 {
-    public Stack<Card> faceDownCards = new Stack<Card>();
+    public List<Card> faceDownCards = new List<Card>();
     public List<Card> faceUpCards = new List<Card>();
 
     public readonly int PileIndex;
@@ -17,7 +18,7 @@ public class TableauPile
 
     public Location PushFaceDown(Card card)
     {
-        faceDownCards.Push(card);
+        faceDownCards.Add(card);
         return new Location(PileType.TABLEAU, PileIndex, faceDownCards.Count - 1, false);
     }
 
@@ -51,7 +52,8 @@ public class TableauPile
         Card? flippedCard = null;
         if (faceUpCards.Count == 0 && faceDownCards.Count > 0)
         {
-            faceUpCards.Add(faceDownCards.Pop());
+            faceUpCards.Add(faceDownCards[faceDownCards.Count - 1]);
+            faceDownCards.RemoveAt(faceDownCards.Count - 1);
         }
         return (cards, flippedCard);
     }

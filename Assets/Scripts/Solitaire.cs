@@ -25,7 +25,7 @@ public class Rank
     public const int ACE = 1;
 }
 
-[System.Serializable]
+[Serializable]
 public struct Card
 {
     public Suit Suit;
@@ -52,13 +52,21 @@ public struct Card
     {
         return Rank + " of " + Suit.ToString();
     }
+
+    public string Id
+    {
+        get
+        {
+            return Rank + "-" + Suit;
+        }
+    }
 }
 
 public class Deck
 {
-    public static Stack<Card> GetShuffledDeck()
+    public static List<Card> GetShuffledDeck()
     {
-        Stack<Card> shuffledCards = new Stack<Card>();
+        List<Card> shuffledCards = new List<Card>();
         List<Card> cards = new List<Card>();
         foreach (var suit in (Suit[])Enum.GetValues(typeof(Suit)))
         {
@@ -71,7 +79,7 @@ public class Deck
         while (cards.Count > 0)
         {
             int cardIndex = random.Next(0, cards.Count);
-            shuffledCards.Push(cards[cardIndex]);
+            shuffledCards.Add(cards[cardIndex]);
             cards.RemoveAt(cardIndex);
         }
         return shuffledCards;
@@ -79,7 +87,7 @@ public class Deck
 }
 
 
-
+[Serializable]
 public class Tableau
 {
     public List<TableauPile> piles = new List<TableauPile>();
@@ -100,7 +108,7 @@ public enum PileType
     FOUNDATION,
 }
 
-[System.Serializable]
+[Serializable]
 public struct Location
 {
     public PileType PileType;
@@ -119,7 +127,7 @@ public struct Location
 
     override public string ToString()
     {
-        return "" + PileType.ToString() + "_" + (PileIndex + 1) + "[" + (Order + 1) + "]";
+        return "" + PileType.ToString() + "_" + (PileIndex + 1) + "[" + (Order) + "]";
     }
 }
 
@@ -142,6 +150,17 @@ public class CardMovement
     }
 }
 
+[Serializable]
+public class SolitaireJSON
+{
+    public List<string> waste = new List<string>();
+    public List<string> stock = new List<string>();
+    public List<List<string>> tableauFaceDown = new List<List<string>>();
+    public List<List<string>> tableauFaceUp = new List<List<string>>();
+    public List<List<string>> foundations = new List<List<string>>();
+}
+
+[Serializable]
 public class Solitaire
 {
     public StockPile stockPile = new StockPile();
@@ -161,9 +180,8 @@ public class Solitaire
         }
     }
 
-    public List<CardMovement> Deal()
+    public IEnumerable<CardMovement> Deal()
     {
-        List<CardMovement> moves = new List<CardMovement>();
         for (int i = 0; i < tableau.piles.Count; i++)
         {
             TableauPile pile = tableau.piles[i];
@@ -181,10 +199,9 @@ public class Solitaire
                 }
                 var move = new CardMovement(card, source, destination);
                 Debug.Log("Move: " + move.ToString());
-                moves.Add(move);
+                yield return move;
             }
         }
-        return moves;
     }
 
     public List<CardMovement> GetPossibleMovesForCard(Card card, Location source)
@@ -337,6 +354,46 @@ public class Solitaire
             Debug.LogWarning("Failed to perform move " + move);
         }
         return success;
+    }
+
+
+    public SolitaireJSON ToJSON()
+    {
+        var json = new SolitaireJSON();
+        foreach (var card in stockPile.waste)
+        {
+            json.waste.Add(card.Id);
+        }
+        foreach (var card in stockPile.stock)
+        {
+            json.stock.Add(card.Id);
+        }
+        foreach (var pile in foundations)
+        {
+            List<string> cards = new List<string>();
+            foreach (var card in pile.Cards)
+            {
+                cards.Add(card.Id);
+            }
+            json.foundations.Add(cards);
+        }
+        foreach (var pile in tableau.piles)
+        {
+            List<string> cards = new List<string>();
+            foreach (var card in pile.faceDownCards)
+            {
+                cards.Add(card.Id);
+            }
+            json.tableauFaceDown.Add(cards);
+
+            cards = new List<string>();
+            foreach (var card in pile.faceUpCards)
+            {
+                cards.Add(card.Id);
+            }
+            json.tableauFaceUp.Add(cards);
+        }
+        return json;
     }
 
 }

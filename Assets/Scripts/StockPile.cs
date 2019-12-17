@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public class StockPile
 {
-    public Stack<Card> stock = Deck.GetShuffledDeck();
-    public Stack<Card> waste = new Stack<Card>();
+    public List<Card> stock = Deck.GetShuffledDeck();
+    public List<Card> waste = new List<Card>();
 
     public CardMovement TurnOverFromStock()
     {
@@ -21,17 +22,23 @@ public class StockPile
 
     public (Card Card, Location Source) PopFromStock()
     {
-        return (stock.Pop(), new Location(PileType.STOCK, 0, stock.Count, false));
+        Debug.Log($"Before popping, stock had {stock.Count} cards.");
+        var card = stock[stock.Count - 1];
+        stock.RemoveAt(stock.Count - 1);
+        Debug.Log($"After popping, stock has {stock.Count} cards");
+        return (card, new Location(PileType.STOCK, 0, stock.Count, false));
     }
 
     public (Card Card, Location Source) PopFromWaste()
     {
-        return (waste.Pop(), new Location(PileType.WASTE, 0, stock.Count, true));
+        var card = waste[waste.Count - 1];
+        waste.RemoveAt(waste.Count - 1);
+        return (card, new Location(PileType.WASTE, 0, stock.Count, true));
     }
 
     public Location PushOntoWaste(Card card)
     {
-        waste.Push(card);
+        waste.Add(card);
         return new Location(PileType.WASTE, 0, waste.Count - 1, true);
     }
 
@@ -44,11 +51,11 @@ public class StockPile
     {
         if (waste.Count > 0)
         {
-            yield return (waste.Peek(), new Location(PileType.WASTE, 0, waste.Count - 1, true));
+            yield return (waste[waste.Count - 1], new Location(PileType.WASTE, 0, waste.Count - 1, true));
         }
         if (stock.Count > 0)
         {
-            yield return (stock.Peek(), new Location(PileType.STOCK, 0, stock.Count - 1, false));
+            yield return (stock[stock.Count - 1], new Location(PileType.STOCK, 0, stock.Count - 1, false));
         }
     }
 }

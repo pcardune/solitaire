@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public class FoundationPile
 {
-    public Stack<Card> Cards = new Stack<Card>();
+    public List<Card> Cards = new List<Card>();
     public readonly int PileIndex;
 
     public FoundationPile(int pileIndex)
@@ -16,12 +17,14 @@ public class FoundationPile
     public Location Push(Card card)
     {
         var destination = GetNextCardLocation();
-        Cards.Push(card);
+        Cards.Add(card);
         return destination;
     }
     public (Card card, Location source) Pop()
     {
-        return (Cards.Pop(), GetNextCardLocation());
+        var card = Cards[Cards.Count - 1];
+        Cards.RemoveAt(Cards.Count - 1);
+        return (card, GetNextCardLocation());
     }
 
     public bool CanPushCardOntoPile(Card card)
@@ -30,7 +33,7 @@ public class FoundationPile
         {
             return card.Rank == Rank.ACE;
         }
-        var lastCard = Cards.Peek();
+        var lastCard = Cards[Cards.Count - 1];
         return lastCard.Rank == card.Rank - 1 && lastCard.Suit == card.Suit;
     }
 
@@ -42,7 +45,7 @@ public class FoundationPile
     public (Card card, Location source) Peek()
     {
         return (
-            Cards.Peek(),
+            Cards[Cards.Count - 1],
             new Location(PileType.FOUNDATION, PileIndex, Cards.Count - 1, true)
         );
     }
