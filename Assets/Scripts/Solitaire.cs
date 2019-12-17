@@ -130,18 +130,25 @@ public struct Location
         return "" + PileType.ToString() + "_" + (PileIndex + 1) + "[" + (Order) + "]";
     }
 }
-
+public enum MoveType
+{
+    SingleCard,
+    StockPileReset,
+}
 public class CardMovement
 {
     public Card Card;
     public Location Source;
     public Location Destination;
 
-    public CardMovement(Card card, Location source, Location destination)
+    public MoveType Type;
+
+    public CardMovement(Card card, Location source, Location destination, MoveType type = MoveType.SingleCard)
     {
         Card = card;
         Source = source;
         Destination = destination;
+        Type = type;
     }
 
     override public string ToString()
@@ -277,6 +284,11 @@ public class Solitaire
             {
                 moves.AddRange(GetPossibleMovesForCard(movableCard));
             }
+
+            if (stockPile.CanReset())
+            {
+                moves.Add(stockPile.GetResetMove());
+            }
             Debug.Log("Found " + moves.Count + " possible moves");
             possibleMovesCache = moves;
         }
@@ -285,7 +297,12 @@ public class Solitaire
 
     public bool MaybePerformMove(CardMovement move)
     {
-        if (move.Source.PileType == PileType.STOCK)
+        if (move.Type == MoveType.StockPileReset)
+        {
+            stockPile.Reset();
+            return true;
+        }
+        else if (move.Source.PileType == PileType.STOCK)
         {
             // you can only move from the stock to the waste
             stockPile.TurnOverFromStock();

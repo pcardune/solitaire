@@ -119,35 +119,49 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     void AnimateMove(CardMovement move)
     {
-        cardBeingMoved = cards[move.Card.Id];
-        cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
-        cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), .1f, move.Destination.Order);
-        cardBeingMoved.cardLocation = move.Destination;
+        if (move.Type == MoveType.StockPileReset)
+        {
+            for (int i = 0; i < solitaire.stockPile.stock.Count; i++)
+            {
+                cardBeingMoved = cards[solitaire.stockPile.stock[i].Id];
+                cardBeingMoved.SetFaceUp(false);
+                cardBeingMoved.cardLocation = new Location(PileType.STOCK, 0, i, false);
+                cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation), .1f, cardBeingMoved.cardLocation.Order);
+            }
+        }
+        else
+        {
+            cardBeingMoved = cards[move.Card.Id];
+            cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
+            cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), .5f, move.Destination.Order);
+            cardBeingMoved.cardLocation = move.Destination;
 
-        if (move.Destination.PileType == PileType.TABLEAU)
-        {
-            var pile = solitaire.tableau.piles[move.Destination.PileIndex];
-            int order = pile.faceDownCards.Count + 1;
-            for (int i = 1; i < pile.faceUpCards.Count; i++)
+            if (move.Destination.PileType == PileType.TABLEAU)
             {
-                var cardBehaviour = cards[pile.faceUpCards[i].Id];
-                var location = move.Destination;
-                location.Order = order;
-                cardBehaviour.cardLocation = location;
-                order++;
-                var parentCard = cards[pile.faceUpCards[i - 1].Id];
-                cardBehaviour.transform.parent = parentCard.transform;
+                var pile = solitaire.tableau.piles[move.Destination.PileIndex];
+                int order = pile.faceDownCards.Count + 1;
+                for (int i = 1; i < pile.faceUpCards.Count; i++)
+                {
+                    var cardBehaviour = cards[pile.faceUpCards[i].Id];
+                    var location = move.Destination;
+                    location.Order = order;
+                    cardBehaviour.cardLocation = location;
+                    order++;
+                    var parentCard = cards[pile.faceUpCards[i - 1].Id];
+                    cardBehaviour.transform.parent = parentCard.transform;
+                }
+            }
+            if (move.Source.PileType == PileType.TABLEAU)
+            {
+                foreach (var card in solitaire.tableau.piles[move.Source.PileIndex].faceUpCards)
+                {
+                    var otherCardToMove = cards[card.Id];
+                    otherCardToMove.cardLocation.FaceUp = true;
+                    otherCardToMove.SetFaceUp(true);
+                }
             }
         }
-        if (move.Source.PileType == PileType.TABLEAU)
-        {
-            foreach (var card in solitaire.tableau.piles[move.Source.PileIndex].faceUpCards)
-            {
-                var otherCardToMove = cards[card.Id];
-                otherCardToMove.cardLocation.FaceUp = true;
-                otherCardToMove.SetFaceUp(true);
-            }
-        }
+
     }
 
     // Update is called once per frame
@@ -268,6 +282,15 @@ public class SolitaireGameBehaviour : MonoBehaviour
             moveQueue.Enqueue(move);
             UpdatePossibleMoveLines();
             UpdateGameStats();
+        }
+    }
+
+    public void ResetStockPile()
+    {
+        if (solitaire.stockPile.CanReset())
+        {
+            var move = solitaire.stockPile.GetResetMove();
+            PerformAndAnimateMove(move);
         }
     }
 
