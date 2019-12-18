@@ -64,7 +64,7 @@ public struct Card
 
 public class Deck
 {
-    public static List<Card> GetShuffledDeck()
+    public static List<Card> GetShuffledDeck(int randomSeed)
     {
         List<Card> shuffledCards = new List<Card>();
         List<Card> cards = new List<Card>();
@@ -75,7 +75,7 @@ public class Deck
                 cards.Add(new Card(suit, value));
             }
         }
-        System.Random random = new System.Random(1);
+        System.Random random = new System.Random(randomSeed);
         while (cards.Count > 0)
         {
             int cardIndex = random.Next(0, cards.Count);
@@ -170,7 +170,7 @@ public class SolitaireJSON
 [Serializable]
 public class Solitaire
 {
-    public StockPile stockPile = new StockPile();
+    public StockPile stockPile;
     public Tableau tableau = new Tableau();
 
     public List<FoundationPile> foundations = new List<FoundationPile>();
@@ -180,8 +180,9 @@ public class Solitaire
 
     public List<CardMovement> moveHistory = new List<CardMovement>();
 
-    public Solitaire()
+    public Solitaire(int randomSeed)
     {
+        stockPile = new StockPile(randomSeed);
         for (int i = 0; i < 4; i++)
         {
             foundations.Add(new FoundationPile(i));
@@ -253,6 +254,29 @@ public class Solitaire
         }
         Debug.Log("  ---> Found " + moves.Count + " possible moves for " + card);
         return moves;
+    }
+
+    public int GetScoreForMove(CardMovement move)
+    {
+        // higher score means better move
+
+        // it's always a good idea to move aces onto the foundation
+        if (move.Card.Rank == Rank.ACE && move.Destination.PileType == PileType.FOUNDATION)
+        {
+            return 10;
+        }
+        // it's always good to uncover cards in the tableau
+        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order == tableau.piles[move.Source.PileIndex].faceDownCards.Count)
+        {
+            return 10;
+        }
+
+        // it's typically good to move cards onto the foundation
+        if (move.Destination.PileType == PileType.FOUNDATION)
+        {
+            return 8;
+        }
+        return 0;
     }
 
     public List<CardMovement> GetPossibleMovesForCard((Card card, Location source) cardFromSource)

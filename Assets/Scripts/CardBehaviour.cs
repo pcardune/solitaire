@@ -52,7 +52,7 @@ public class CardSpriteManager
     }
 }
 
-[RequireComponent(typeof(DragBehaviour))]
+[RequireComponent(typeof(DragBehaviour)), RequireComponent(typeof(MoveBehaviour))]
 public class CardBehaviour : MonoBehaviour
 {
     public Card card;
@@ -69,6 +69,7 @@ public class CardBehaviour : MonoBehaviour
 
     SpriteRenderer spriteRenderer;
     DragBehaviour dragBehaviour;
+    MoveBehaviour moveBehaviour;
 
     public DragBehaviour Drag
     {
@@ -78,10 +79,19 @@ public class CardBehaviour : MonoBehaviour
         }
     }
 
+    public MoveBehaviour Move
+    {
+        get
+        {
+            return moveBehaviour;
+        }
+    }
+
     void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         dragBehaviour = GetComponent<DragBehaviour>();
+        moveBehaviour = GetComponent<MoveBehaviour>();
     }
 
     void Start()

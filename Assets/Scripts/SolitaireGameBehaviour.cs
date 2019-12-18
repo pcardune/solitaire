@@ -71,7 +71,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     void Start()
     {
         random = new System.Random(randomSeed);
-        solitaire = new Solitaire();
+        solitaire = new Solitaire(randomSeed);
         int i = 0;
         foreach (Card card in solitaire.stockPile.stock)
         {
@@ -86,6 +86,26 @@ public class SolitaireGameBehaviour : MonoBehaviour
             i++;
         }
         Validate();
+    }
+
+
+    public void NewGame()
+    {
+        random = new System.Random(randomSeed);
+        solitaire = new Solitaire(randomSeed);
+        int i = 0;
+        foreach (Card card in solitaire.stockPile.stock)
+        {
+            var location = new Location(PileType.STOCK, 0, i, false);
+            var cardGameObject = cards[card.Id];
+            cardGameObject.card = card;
+            cardGameObject.SetFaceUp(false);
+            cardGameObject.cardLocation = location;
+            cardGameObject.Move.MoveTo(GetPositionForCardLocation(location), .1f, location.Order);
+            i++;
+        }
+        Validate();
+        state = GameState.Init;
     }
 
     public Vector3 GetPositionForCardLocation(Location location)

@@ -6,8 +6,13 @@ using UnityEngine;
 [Serializable]
 public class StockPile
 {
-    public List<Card> stock = Deck.GetShuffledDeck();
+    public List<Card> stock;
     public List<Card> waste = new List<Card>();
+
+    public StockPile(int randomSeed)
+    {
+        stock = Deck.GetShuffledDeck(randomSeed);
+    }
 
     public CardMovement TurnOverFromStock()
     {
