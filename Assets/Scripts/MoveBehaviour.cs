@@ -1,7 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
+
+[Serializable]
+public struct CardAudio
+{
+    public AudioSource audioSource;
+    public float startTime;
+}
 
 public class MoveBehaviour : MonoBehaviour
 {
@@ -16,6 +23,8 @@ public class MoveBehaviour : MonoBehaviour
     Vector3 targetPosition;
     int targetSortingOrder;
     // Start is called before the first frame update
+    public List<CardAudio> cardAudios;
+
     void Start()
     {
     }
@@ -39,12 +48,19 @@ public class MoveBehaviour : MonoBehaviour
         }
     }
 
-    public void MoveTo(Vector3 position, float aDuration, int sortingOrder)
+    public void MoveTo(Vector3 position, float aDuration, int sortingOrder, bool playSound = true)
     {
         Debug.Log("Moving " + gameObject.name + " to " + position);
         timeRemaining = aDuration;
         targetPosition = position;
         targetSortingOrder = sortingOrder;
         enabled = true;
+        if (playSound && cardAudios.Count > 0)
+        {
+            var random = new System.Random();
+            var audio = cardAudios[random.Next(0, cardAudios.Count)];
+            audio.audioSource.time = audio.startTime;
+            audio.audioSource.Play();
+        }
     }
 }
