@@ -17,17 +17,18 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public CardBehaviour cardPrefab;
     public CardTarget cardTargetPrefab;
     public GameObject lineRendererPrefab;
-    Solitaire solitaire;
+    public Solitaire solitaire { get; private set; }
 
     public Text winText;
-
-    public Text GameStatsText;
 
     public Vector3 TableauPosition;
     public Vector3 StockPilePosition;
     public Vector2 CardDimensions;
     public Vector2 CardSpacing;
     public Vector3 FoundationPilePosition;
+
+    public float GameDuration { get; private set; }
+
 
     Dictionary<string, CardBehaviour> cards = new Dictionary<string, CardBehaviour>();
 
@@ -51,7 +52,19 @@ public class SolitaireGameBehaviour : MonoBehaviour
     CardBehaviour cardBeingMoved;
     System.Random random;
 
+    public bool useRandomSeed = true;
     public int randomSeed = 1;
+    public int RandomSeedToUse
+    {
+        get
+        {
+            if (useRandomSeed)
+            {
+                return randomSeed;
+            }
+            return new System.Random().Next();
+        }
+    }
     public bool debugPossibleMoves = false;
     List<MoveLineBehaviour> possibleMoveLines = new List<MoveLineBehaviour>();
 
@@ -70,8 +83,9 @@ public class SolitaireGameBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        random = new System.Random(randomSeed);
-        solitaire = new Solitaire(randomSeed);
+        random = new System.Random(RandomSeedToUse);
+        solitaire = new Solitaire(RandomSeedToUse);
+        GameDuration = 0;
         int i = 0;
         foreach (Card card in solitaire.stockPile.stock)
         {
@@ -91,16 +105,17 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void NewGame()
     {
-        random = new System.Random(randomSeed);
-        solitaire = new Solitaire(randomSeed);
+        random = new System.Random(RandomSeedToUse);
+        solitaire = new Solitaire(RandomSeedToUse);
+        GameDuration = 0;
         int i = 0;
         foreach (Card card in solitaire.stockPile.stock)
         {
-            var location = new Location(PileType.STOCK, 0, i, false);
             var cardGameObject = cards[card.Id];
+            var location = new Location(PileType.STOCK, 0, i, false);
+            cardGameObject.cardLocation = location;
             cardGameObject.card = card;
             cardGameObject.SetFaceUp(false);
-            cardGameObject.cardLocation = location;
             cardGameObject.Move.MoveTo(GetPositionForCardLocation(location), .1f, location.Order);
             i++;
         }
@@ -222,6 +237,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
         if (state == GameState.Init)
         {
+            winText.gameObject.SetActive(false);
             DealCards();
         }
         if (state == GameState.Dealing)
@@ -241,6 +257,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
         if (state == GameState.Playing)
         {
+            GameDuration += Time.deltaTime;
             if (justFinishedMovingCard != null)
             {
                 Validate();
@@ -347,7 +364,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             moveQueue.Enqueue(move);
             UpdatePossibleMoveLines();
-            UpdateGameStats();
         }
     }
 
@@ -358,11 +374,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
             var move = solitaire.stockPile.GetResetMove();
             PerformAndAnimateMove(move);
         }
-    }
-
-    void UpdateGameStats()
-    {
-        GameStatsText.text = "Moves: " + solitaire.moveHistory.Count;
     }
 
     void UpdatePossibleMoveLines()
