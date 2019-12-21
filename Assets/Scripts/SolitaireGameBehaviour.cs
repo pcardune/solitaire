@@ -11,6 +11,7 @@ public enum GameState
     Init,
     Dealing,
     Playing,
+    Resetting,
 }
 public class SolitaireGameBehaviour : MonoBehaviour
 {
@@ -113,6 +114,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             var cardGameObject = cards[card.Id];
             var location = new Location(PileType.STOCK, 0, i, false);
+            cardGameObject.transform.parent = null;
             cardGameObject.cardLocation = location;
             cardGameObject.card = card;
             cardGameObject.SetFaceUp(false);
@@ -120,7 +122,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             i++;
         }
         Validate();
-        state = GameState.Init;
+        state = GameState.Resetting;
     }
 
     public Vector3 GetPositionForCardLocation(Location location)
@@ -186,7 +188,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 cardBeingMoved = cards[solitaire.stockPile.stock[i].Id];
                 cardBeingMoved.SetFaceUp(false);
                 cardBeingMoved.cardLocation = new Location(PileType.STOCK, 0, i, false);
-                cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation), moveDuration, cardBeingMoved.cardLocation.Order);
+                cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation), moveDuration, cardBeingMoved.cardLocation.Order);
             }
         }
         else if (move.Type == MoveType.SingleCard)
@@ -194,7 +196,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardBeingMoved = cards[move.Card.Id];
             cardBeingMoved.transform.parent = null;
             cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
-            cardBeingMoved.GetComponent<MoveBehaviour>().MoveTo(GetPositionForCardLocation(move.Destination), moveDuration, move.Destination.Order);
+            cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.Destination), moveDuration, move.Destination.Order);
             cardBeingMoved.cardLocation = move.Destination;
 
             if (move.Destination.PileType == PileType.TABLEAU)
@@ -229,10 +231,27 @@ public class SolitaireGameBehaviour : MonoBehaviour
     void Update()
     {
         CardBehaviour justFinishedMovingCard = null;
-        if (cardBeingMoved != null && !cardBeingMoved.GetComponent<MoveBehaviour>().IsMoving)
+        if (cardBeingMoved != null && !cardBeingMoved.Move.IsMoving)
         {
             justFinishedMovingCard = cardBeingMoved;
             cardBeingMoved = null;
+        }
+
+        if (state == GameState.Resetting)
+        {
+            var stillMoving = false;
+            foreach (var card in cards.Values)
+            {
+                if (card.Move.IsMoving)
+                {
+                    stillMoving = true;
+                    break;
+                }
+            }
+            if (!stillMoving)
+            {
+                state = GameState.Init;
+            }
         }
 
         if (state == GameState.Init)
@@ -381,13 +400,13 @@ public class SolitaireGameBehaviour : MonoBehaviour
         if (debugPossibleMoves)
         {
             var moves = solitaire.GetAllPossibleMoves();
-            var randomMove = solitaire.GetRandomMove(random);
-            var s = "Found the following possible moves:\n";
-            for (int i = 0; i < moves.Count; i++)
-            {
-                s += "  " + i + ". " + moves[i].ToString() + "\n";
-            }
-            Debug.Log(s);
+            var randomMove = solitaire.GetSmartMove(random);
+            // var s = "Found the following possible moves:\n";
+            // for (int i = 0; i < moves.Count; i++)
+            // {
+            //     s += "  " + i + ". " + moves[i].ToString() + "\n";
+            // }
+            // Debug.Log(s);
 
             var lineIndex = 0;
             foreach (var move in moves)

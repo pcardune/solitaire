@@ -177,6 +177,7 @@ public class Solitaire
 
     List<CardMovement> possibleMovesCache;
     CardMovement randomMoveCache;
+    CardMovement smartMoveCache;
 
     public List<CardMovement> moveHistory = new List<CardMovement>();
 
@@ -330,6 +331,33 @@ public class Solitaire
         return randomMoveCache;
     }
 
+    public CardMovement GetSmartMove(System.Random random)
+    {
+        if (smartMoveCache == null)
+        {
+            List<CardMovement> movesToConsider = new List<CardMovement>();
+            int maxScore = 0;
+            var moves = GetAllPossibleMoves();
+            foreach (var move in moves)
+            {
+                var score = GetScoreForMove(move);
+                if (score == maxScore)
+                {
+                    movesToConsider.Add(move);
+                }
+                else if (score > maxScore)
+                {
+                    movesToConsider.Clear();
+                    movesToConsider.Add(move);
+                    maxScore = score;
+                }
+            }
+            smartMoveCache = movesToConsider[random.Next(0, movesToConsider.Count)];
+        }
+        return smartMoveCache;
+
+    }
+
     public bool MaybePerformMove(CardMovement move)
     {
         if (move.Type == MoveType.StockPileReset)
@@ -399,6 +427,7 @@ public class Solitaire
         {
             possibleMovesCache = null;
             randomMoveCache = null;
+            smartMoveCache = null;
             moveHistory.Add(move);
         }
         else

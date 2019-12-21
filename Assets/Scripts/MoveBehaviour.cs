@@ -17,7 +17,7 @@ public class MoveBehaviour : MonoBehaviour
     {
         get
         {
-            return timeRemaining > 0;
+            return enabled;
         }
     }
     Vector3 targetPosition;
