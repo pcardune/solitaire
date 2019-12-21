@@ -267,16 +267,45 @@ public class Solitaire
             return 10;
         }
         // it's always good to uncover cards in the tableau
-        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order == tableau.piles[move.Source.PileIndex].faceDownCards.Count)
+        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order > 0 && move.Source.Order == tableau.piles[move.Source.PileIndex].faceDownCards.Count)
         {
             return 10;
+        }
+
+        // it's always good to move a card onto the tableau from the waste if it allows a new card to be uncovered
+        if (move.Destination.PileType == PileType.TABLEAU && move.Source.PileType == PileType.WASTE)
+        {
+            foreach (var pile in tableau.piles)
+            {
+                if (pile.faceUpCards.Count > 0)
+                {
+                    var faceUpCard = pile.faceUpCards[0];
+                    if (move.Card.Color != faceUpCard.Color && move.Card.Rank == faceUpCard.Rank + 1)
+                    {
+                        return 9;
+                    }
+                }
+            }
         }
 
         // it's typically good to move cards onto the foundation
         if (move.Destination.PileType == PileType.FOUNDATION)
         {
-            return 8;
+            return 7;
         }
+
+        // it's useless to move aces off the foundation
+        if (move.Source.PileType == PileType.FOUNDATION && move.Card.Rank == Rank.ACE)
+        {
+            return -1;
+        }
+
+        // it's useless to move kings in the tableau when they are already at order 0
+        if (move.Card.Rank == Rank.KING && move.Source.PileType == PileType.TABLEAU && move.Source.Order == 0 && move.Destination.PileType == PileType.TABLEAU)
+        {
+            return -1;
+        }
+
         return 0;
     }
 
@@ -336,7 +365,7 @@ public class Solitaire
         if (smartMoveCache == null)
         {
             List<CardMovement> movesToConsider = new List<CardMovement>();
-            int maxScore = 0;
+            int maxScore = int.MinValue;
             var moves = GetAllPossibleMoves();
             foreach (var move in moves)
             {

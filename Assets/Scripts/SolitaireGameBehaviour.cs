@@ -372,7 +372,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void MakeRandomMove()
     {
-        var move = solitaire.GetRandomMove(random);
+        var move = solitaire.GetSmartMove(random);
         Debug.Log("Performing random move: " + move);
         PerformAndAnimateMove(move);
     }
