@@ -3,51 +3,67 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Serializable]
-public class StockPile
+public class CardPile : List<Card>
 {
-    public List<Card> stock;
-    public List<Card> waste = new List<Card>();
+    private PileType _pileType;
+    private int _pileIndex;
+    private int _faceDownCount;
 
-    public StockPile(int randomSeed)
+    public PileType PileType
     {
-        stock = Deck.GetShuffledDeck(randomSeed);
-    }
-
-    public CardMovement TurnOverFromStock()
-    {
-        if (stock.Count > 0)
+        get
         {
-            (var topCard, var source) = PopFromStock();
-            var destination = PushOntoWaste(topCard);
-            return new CardMovement(topCard, source, destination);
+            return _pileType;
         }
-        return null;
     }
 
-    public (Card Card, Location Source) PopFromStock()
+    public int PileIndex
     {
-        var card = stock[stock.Count - 1];
-        stock.RemoveAt(stock.Count - 1);
-        return (card, new Location(PileType.STOCK, 0, stock.Count, false));
+        get
+        {
+            return _pileIndex;
+        }
     }
 
-    public (Card Card, Location Source) PopFromWaste()
+    public CardPile(PileType pileType, int pileIndex, int faceDownCount)
     {
-        var card = waste[waste.Count - 1];
-        waste.RemoveAt(waste.Count - 1);
-        return (card, new Location(PileType.WASTE, 0, stock.Count, true));
+        _pileType = pileType;
+        _pileIndex = pileIndex;
+        _faceDownCount = faceDownCount;
     }
 
-    public Location PushOntoWaste(Card card)
+    public LocatedCard Pop()
     {
-        waste.Add(card);
-        return new Location(PileType.WASTE, 0, waste.Count - 1, true);
+        var c = Peek();
+        RemoveAt(Count - 1);
+        return c;
     }
 
-    public Location GetNextCardLocation()
+    public LocatedCard Peek()
     {
-        return new Location(PileType.WASTE, 0, waste.Count, true);
+        int order = Count - 1;
+        var card = this[order];
+        return new LocatedCard(card, new Location(PileType, PileIndex, order, order >= _faceDownCount));
+    }
+
+    /// <summary>
+    /// The location of a card if we were to drop it onto this pile.
+    /// </summary>
+    public Location GetDropCardLocation()
+    {
+        return new Location(PileType, PileIndex, Count, Count >= _faceDownCount);
+    }
+}
+
+[Serializable]
+public class StockAndWastePile
+{
+    public CardPile stock = new CardPile(PileType.STOCK, 0, int.MaxValue);
+    public CardPile waste = new CardPile(PileType.WASTE, 0, 0);
+
+    public StockAndWastePile(int randomSeed)
+    {
+        stock.AddRange(Deck.GetShuffledDeck(randomSeed));
     }
 
     public IEnumerable<(Card card, Location source)> GetMovableCards()

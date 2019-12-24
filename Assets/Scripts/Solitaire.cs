@@ -60,6 +60,21 @@ public struct Card
             return Rank + "-" + Suit;
         }
     }
+
+    override public int GetHashCode()
+    {
+        return ToByte();
+    }
+
+    public byte ToByte()
+    {
+        return (byte)((int)Suit * 13 + Rank);
+    }
+
+    public static Card FromByte(byte b)
+    {
+        return new Card((Suit)(b / 13), b % 13);
+    }
 }
 
 public class Deck
@@ -130,6 +145,18 @@ public struct Location
         return "" + PileType.ToString() + "_" + (PileIndex + 1) + "[" + (Order) + "]";
     }
 }
+
+public struct LocatedCard
+{
+    public Card Card;
+    public Location Location;
+    public LocatedCard(Card card, Location location)
+    {
+        Card = card;
+        Location = location;
+    }
+}
+
 public enum MoveType
 {
     SingleCard,
@@ -151,6 +178,14 @@ public class CardMovement
         Type = type;
     }
 
+    public CardMovement(LocatedCard locatedCard, Location destination, MoveType type = MoveType.SingleCard)
+    {
+        Card = locatedCard.Card;
+        Source = locatedCard.Location;
+        Destination = destination;
+        Type = type;
+    }
+
     override public string ToString()
     {
         return "CardMovement(" + Card.ToString() + ", " + Source.ToString() + ", " + Destination.ToString() + ")";
@@ -167,10 +202,182 @@ public class SolitaireJSON
     public List<List<string>> foundations = new List<List<string>>();
 }
 
+public class SolitairePacker
+{
+    public static Solitaire Unpack(byte[] bytes)
+    {
+
+        Solitaire solitaire = new Solitaire(1);
+        int i = 0;
+
+        // unpack foundation
+        for (int j = 0; j < 4; j++)
+        {
+            var pile = solitaire.foundations[j];
+            pile.Cards.Clear();
+            for (int k = 0; k < 13; k++)
+            {
+                byte b = bytes[i++];
+                if (b != 0)
+                {
+                    pile.Cards.Add(Card.FromByte(b));
+                }
+            }
+        }
+
+        // unpack tableau facedown
+        for (int j = 1; j < 7; j++)
+        {
+            var pile = solitaire.tableau.piles[j];
+            pile.faceDownCards.Clear();
+            for (int k = 0; k < j; k++)
+            {
+                byte b = bytes[i++];
+                if (b != 0)
+                {
+                    pile.faceDownCards.Add(Card.FromByte(b));
+                }
+            }
+        }
+
+        // unpack tableau faceup
+        for (int j = 0; j < 7; j++)
+        {
+            var pile = solitaire.tableau.piles[j];
+            pile.faceUpCards.Clear();
+            for (int k = 0; k < 13; k++)
+            {
+                byte b = bytes[i++];
+                if (b != 0)
+                {
+                    pile.faceUpCards.Add(Card.FromByte(b));
+                }
+            }
+        }
+
+        // unpack waste
+        {
+            var pile = solitaire.stockPile.waste;
+            pile.Clear();
+            for (int k = 0; k < 24; k++)
+            {
+                byte b = bytes[i++];
+                if (b != 0)
+                {
+                    pile.Add(Card.FromByte(b));
+                }
+            }
+        }
+        // unpack stock
+        {
+            var pile = solitaire.stockPile.stock;
+            pile.Clear();
+            for (int k = 0; k < 24; k++)
+            {
+                byte b = bytes[i++];
+                if (b != 0)
+                {
+                    pile.Add(Card.FromByte(b));
+                }
+            }
+        }
+
+        return solitaire;
+    }
+
+    public static byte[] Pack(Solitaire solitaire)
+    {
+        // slots:
+        //   foundation: 13 * 4 = 52
+        //   tableau face down: 0+1+2+3+4+5+6 = 21
+        //   tableau face up = 13*7 = 91
+        //   waste = 52 - 28 = 24
+        //   stock = 52 - 28 = 24
+        // total slots: 212
+        byte[] slots = new byte[219];
+        int i = 0;
+
+        // pack foundation
+        for (int j = 0; j < 4; j++)
+        {
+            var pile = solitaire.foundations[j];
+            int k = 0;
+            for (; k < pile.Cards.Count; k++)
+            {
+                slots[i++] = pile.Cards[k].ToByte();
+            }
+            for (; k < 13; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+
+        // pack tableau face down
+        for (int j = 1; j < 7; j++)
+        {
+            var pile = solitaire.tableau.piles[j];
+            int k = 0;
+            for (; k < pile.faceDownCards.Count; k++)
+            {
+                slots[i++] = pile.faceDownCards[k].ToByte();
+            }
+            for (; k < j; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+
+        // pack tableau face up
+        for (int j = 0; j < 7; j++)
+        {
+            var pile = solitaire.tableau.piles[j];
+            int k = 0;
+            for (; k < pile.faceUpCards.Count; k++)
+            {
+                slots[i++] = pile.faceUpCards[k].ToByte();
+            }
+            for (; k < 13; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+
+        // pack waste
+        {
+            var pile = solitaire.stockPile.waste;
+            int k = 0;
+            for (; k < pile.Count; k++)
+            {
+                slots[i++] = pile[k].ToByte();
+            }
+            for (; k < 24; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+        Debug.Log("Finished packing waste. byte offset: " + i);
+        // pack stock
+        {
+            var pile = solitaire.stockPile.stock;
+            int k = 0;
+            for (; k < pile.Count; k++)
+            {
+                slots[i++] = pile[k].ToByte();
+            }
+            for (; k < 24; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+
+        return slots;
+    }
+}
+
 [Serializable]
 public class Solitaire
 {
-    public StockPile stockPile;
+    public StockAndWastePile stockPile;
     public Tableau tableau = new Tableau();
 
     public List<FoundationPile> foundations = new List<FoundationPile>();
@@ -183,7 +390,7 @@ public class Solitaire
 
     public Solitaire(int randomSeed)
     {
-        stockPile = new StockPile(randomSeed);
+        stockPile = new StockAndWastePile(randomSeed);
         for (int i = 0; i < 4; i++)
         {
             foundations.Add(new FoundationPile(i));
@@ -197,20 +404,25 @@ public class Solitaire
             TableauPile pile = tableau.piles[i];
             for (int j = 0; j < i + 1; j++)
             {
-                (Card card, Location source) = stockPile.PopFromStock();
+                var topCard = stockPile.stock.Pop();
                 Location destination;
                 if (j < i)
                 {
-                    destination = pile.PushFaceDown(card);
+                    destination = pile.PushFaceDown(topCard.Card);
                 }
                 else
                 {
-                    destination = pile.PushFaceUp(card);
+                    destination = pile.PushFaceUp(topCard.Card);
                 }
-                var move = new CardMovement(card, source, destination);
+                var move = new CardMovement(topCard, destination);
                 yield return move;
             }
         }
+    }
+
+    public List<CardMovement> DealAll()
+    {
+        return new List<CardMovement>(Deal());
     }
 
     public List<CardMovement> GetPossibleMovesForCard(Card card, Location source)
@@ -219,7 +431,7 @@ public class Solitaire
         List<CardMovement> moves = new List<CardMovement>();
         if (source.PileType == PileType.STOCK)
         {
-            moves.Add(new CardMovement(card, source, stockPile.GetNextCardLocation()));
+            moves.Add(new CardMovement(card, source, stockPile.waste.GetDropCardLocation()));
         }
         else if (source.FaceUp)
         {
@@ -397,20 +609,21 @@ public class Solitaire
         else if (move.Source.PileType == PileType.STOCK)
         {
             // you can only move from the stock to the waste
-            stockPile.TurnOverFromStock();
+            var topCard = stockPile.stock.Pop();
+            stockPile.waste.Add(topCard.Card);
             return true;
         }
         else if (move.Source.PileType == PileType.WASTE)
         {
             if (move.Destination.PileType == PileType.TABLEAU)
             {
-                stockPile.PopFromWaste();
+                stockPile.waste.Pop();
                 tableau.piles[move.Destination.PileIndex].PushFaceUp(move.Card);
                 return true;
             }
             if (move.Destination.PileType == PileType.FOUNDATION)
             {
-                stockPile.PopFromWaste();
+                stockPile.waste.Pop();
                 foundations[move.Destination.PileIndex].Push(move.Card);
                 return true;
             }

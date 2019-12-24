@@ -2172,8 +2172,8 @@ MonoBehaviour:
   FoundationPilePosition: {x: -4.76, y: 3.31, z: 0}
   AutoPlay: 0
   MaxAutoPlayMoves: 1000
-  useRandomSeed: 0
-  randomSeed: 0
+  useRandomSeed: 1
+  randomSeed: 1
   debugPossibleMoves: 0
   moveDuration: 0.1
   state: 0
