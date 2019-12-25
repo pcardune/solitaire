@@ -54,6 +54,14 @@ public class CardPile : List<Card>
     {
         return new Location(PileType, PileIndex, Count, Count >= _faceDownCount);
     }
+
+    public IEnumerable<LocatedCard> LocatedCards()
+    {
+        for (int order = 0; order < Count; order++)
+        {
+            yield return new LocatedCard(this[order], new Location(PileType, PileIndex, order, order >= _faceDownCount));
+        }
+    }
 }
 
 [Serializable]

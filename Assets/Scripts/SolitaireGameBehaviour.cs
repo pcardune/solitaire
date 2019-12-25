@@ -179,10 +179,12 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         if (move.Type == MoveType.StockPileReset)
         {
-            for (int i = 0; i < solitaire.stockPile.stock.Count; i++)
+            // when doing a stock pile reset, we have to move all the cards from the waste
+            // pile to the stock pile 
+            foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
             {
-                cardBeingMoved = cardsById[solitaire.stockPile.stock[i].Id];
-                cardBeingMoved.cardLocation = new Location(PileType.STOCK, 0, i, false);
+                cardBeingMoved = cardsById[locatedCard.Card.Id];
+                cardBeingMoved.cardLocation = locatedCard.Location;
                 cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation));
             }
         }
@@ -193,29 +195,31 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.Destination));
             cardBeingMoved.cardLocation = move.Destination;
 
+            // Update parents of all the cards in the destination pile
+            // so that they get dragged appropriately
             if (move.Destination.PileType == PileType.TABLEAU)
             {
                 var pile = solitaire.tableau.piles[move.Destination.PileIndex];
-                int order = pile.FaceDownCount + 1;
-                for (int i = pile.FaceDownCount + 1; i < pile.Count; i++)
+                CardBehaviour parent = null;
+                foreach (var locatedCard in pile.LocatedCards())
                 {
-                    var cardBehaviour = cardsById[pile[i].Id];
-                    var location = move.Destination;
-                    location.Order = order;
-                    cardBehaviour.cardLocation = location;
-                    order++;
-                    var parentCard = cardsById[pile[i - 1].Id];
-                    cardBehaviour.transform.parent = parentCard.transform;
+                    var cardBehaviour = cardsById[locatedCard.Card.Id];
+                    cardBehaviour.cardLocation = locatedCard.Location;
+                    if (parent != null && parent.cardLocation.FaceUp == true)
+                    {
+                        cardBehaviour.transform.parent = parent.transform;
+                    }
+                    parent = cardBehaviour;
                 }
             }
+
             if (move.Source.PileType == PileType.TABLEAU)
             {
                 var pile = solitaire.tableau.piles[move.Source.PileIndex];
-                for (int i = pile.FaceDownCount; i < pile.Count; i++)
+                foreach (var locatedCard in pile.LocatedCards())
                 {
-                    var card = pile[i];
-                    var otherCardToMove = cardsById[card.Id];
-                    otherCardToMove.cardLocation.FaceUp = true;
+                    var otherCardToMove = cardsById[locatedCard.Card.Id];
+                    otherCardToMove.cardLocation = locatedCard.Location;
                 }
             }
         }
