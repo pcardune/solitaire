@@ -62,8 +62,6 @@ public class CardBehaviour : MonoBehaviour
 
     public Location cardLocation { get { return locatedCard.Location; } }
 
-    public SolitaireGameBehaviour solitaireGameBehaviour;
-
     public float dragDelay = 0.5f;
 
     float dragStart;
@@ -110,25 +108,25 @@ public class CardBehaviour : MonoBehaviour
 
     void OnMouseUpAsButton()
     {
-        solitaireGameBehaviour.OnClickCard(this);
+        SolitaireGameBehaviour.Instance.OnClickCard(this);
     }
 
     void OnMouseDown()
     {
-        solitaireGameBehaviour.OnMouseDownCard(this);
+        SolitaireGameBehaviour.Instance.OnMouseDownCard(this);
     }
 
     void OnMouseDrag()
     {
         if (dragBehaviour.DragDuration > 0.1f)
         {
-            solitaireGameBehaviour.OnMouseDragCard(this);
+            SolitaireGameBehaviour.Instance.OnMouseDragCard(this);
         }
     }
 
     void OnMouseUp()
     {
-        solitaireGameBehaviour.OnMouseUpCard(this);
+        SolitaireGameBehaviour.Instance.OnMouseUpCard(this);
     }
 
 }

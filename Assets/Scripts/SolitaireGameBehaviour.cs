@@ -92,7 +92,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardGameObject.transform.position = GetPositionForCardLocation(cardGameObject.cardLocation);
             cardGameObject.locatedCard = locatedCard;
             cardGameObject.name = locatedCard.Card.ToString();
-            cardGameObject.solitaireGameBehaviour = this;
             cardsById[locatedCard.Card.Id] = cardGameObject;
             i++;
         }
