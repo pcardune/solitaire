@@ -472,7 +472,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             var pile = solitaire.foundations[pileIndex];
             int order = 0;
             Card? lastCard = null;
-            foreach (var card in pile.Cards)
+            foreach (var card in pile)
             {
                 var location = cards[card.Id].cardLocation;
                 AssertIsTrue(location.PileType == PileType.FOUNDATION, $"{card}: Wrong Pile: {location.PileType}");

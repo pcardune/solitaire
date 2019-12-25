@@ -150,10 +150,16 @@ public struct LocatedCard
 {
     public Card Card;
     public Location Location;
+
     public LocatedCard(Card card, Location location)
     {
         Card = card;
         Location = location;
+    }
+
+    public (Card Card, Location Location) AsTuple()
+    {
+        return (Card, Location);
     }
 }
 
@@ -214,13 +220,13 @@ public class SolitairePacker
         for (int j = 0; j < 4; j++)
         {
             var pile = solitaire.foundations[j];
-            pile.Cards.Clear();
+            pile.Clear();
             for (int k = 0; k < 13; k++)
             {
                 byte b = bytes[i++];
                 if (b != 0)
                 {
-                    pile.Cards.Add(Card.FromByte(b));
+                    pile.Add(Card.FromByte(b));
                 }
             }
         }
@@ -302,9 +308,9 @@ public class SolitairePacker
         {
             var pile = solitaire.foundations[j];
             int k = 0;
-            for (; k < pile.Cards.Count; k++)
+            for (; k < pile.Count; k++)
             {
-                slots[i++] = pile.Cards[k].ToByte();
+                slots[i++] = pile[k].ToByte();
             }
             for (; k < 13; k++)
             {
@@ -533,9 +539,9 @@ public class Solitaire
             List<CardMovement> moves = new List<CardMovement>();
             foreach (var pile in foundations)
             {
-                if (pile.Cards.Count > 0)
+                if (pile.Count > 0)
                 {
-                    moves.AddRange(GetPossibleMovesForCard(pile.Peek()));
+                    moves.AddRange(GetPossibleMovesForCard(pile.Peek().AsTuple()));
                 }
             }
 
@@ -694,7 +700,7 @@ public class Solitaire
         foreach (var pile in foundations)
         {
             List<string> cards = new List<string>();
-            foreach (var card in pile.Cards)
+            foreach (var card in pile)
             {
                 cards.Add(card.Id);
             }
