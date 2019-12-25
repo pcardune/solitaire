@@ -7,7 +7,7 @@ public class CardPile : List<Card>
 {
     private PileType _pileType;
     private int _pileIndex;
-    protected int _faceDownCount;
+    private int _faceDownCount;
 
     public PileType PileType
     {
@@ -24,9 +24,6 @@ public class CardPile : List<Card>
             return _pileIndex;
         }
     }
-
-    public int FaceDownCount { get { return Math.Min(FaceDownCount, Count); } }
-    public int FaceUpCount { get { return Count - FaceDownCount; } }
 
     public CardPile(PileType pileType, int pileIndex, int faceDownCount)
     {
@@ -55,14 +52,6 @@ public class CardPile : List<Card>
     public Location GetDropCardLocation()
     {
         return new Location(PileType, PileIndex, Count, Count >= _faceDownCount);
-    }
-
-    public IEnumerable<LocatedCard> EnumerateLocatedCards()
-    {
-        for (int order = 0; order < Count; order++)
-        {
-            yield return new LocatedCard(this[order], new Location(PileType, PileIndex, order, order >= _faceDownCount));
-        }
     }
 }
 

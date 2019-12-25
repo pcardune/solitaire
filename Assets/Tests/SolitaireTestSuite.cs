@@ -84,11 +84,9 @@ namespace Tests
             var s = new Solitaire(1);
             s.DealAll();
 
-            Assert.That(s.stockPile.waste, Has.Count.EqualTo(0), "Waste pile starts off with no cards");
-            Assert.That(s.stockPile.stock, Has.Count.EqualTo(24), "Stock pile should have 28 cards after initial deal out");
+            Assert.That(s.stockPile.waste, Has.Count.EqualTo(0));
             s.PerformMove(new CardMovement(s.stockPile.stock.Peek(), s.stockPile.waste.GetDropCardLocation()));
-            Assert.That(s.stockPile.waste, Has.Count.EqualTo(1), "Waste pile should now have one card");
-            Assert.That(s.stockPile.stock, Has.Count.EqualTo(23), "Stock pile should have one less card");
+            Assert.That(s.stockPile.waste, Has.Count.EqualTo(1));
         }
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
