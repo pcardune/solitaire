@@ -7,7 +7,7 @@ public class CardPile : List<Card>
 {
     private PileType _pileType;
     private int _pileIndex;
-    private int _faceDownCount;
+    protected int _faceDownCount;
 
     public PileType PileType
     {
@@ -24,6 +24,7 @@ public class CardPile : List<Card>
             return _pileIndex;
         }
     }
+    public int FaceDownCount { get { return Math.Min(_faceDownCount, Count); } }
 
     public CardPile(PileType pileType, int pileIndex, int faceDownCount)
     {

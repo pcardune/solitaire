@@ -4,70 +4,63 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public class TableauPile
+public class TableauPile : CardPile
 {
-    public List<Card> faceDownCards = new List<Card>();
-    public List<Card> faceUpCards = new List<Card>();
-
-    public readonly int PileIndex;
-
-    public TableauPile(int pileIndex)
-    {
-        PileIndex = pileIndex;
-    }
+    public TableauPile(int pileIndex) : base(PileType.TABLEAU, pileIndex, pileIndex) { }
 
     public Location PushFaceDown(Card card)
     {
-        faceDownCards.Add(card);
-        return new Location(PileType.TABLEAU, PileIndex, faceDownCards.Count - 1, false);
+        Add(card);
+        _faceDownCount = Count;
+        return Peek().Location;
     }
 
     public Location PushFaceUp(Card card)
     {
-        var destination = GetNextCardLocation();
-        faceUpCards.Add(card);
-        return destination;
+        Add(card);
+        _faceDownCount = Math.Min(_faceDownCount, Count - 1);
+        return Peek().Location;
     }
 
     public bool CanPushCardOntoPile(Card card)
     {
-        if (faceUpCards.Count == 0)
+        if (Count == 0)
         {
-            return faceDownCards.Count == 0 && card.Rank == Rank.KING;
+            return card.Rank == Rank.KING;
         }
-        var lastCard = faceUpCards[faceUpCards.Count - 1];
+        var lastCard = this[Count - 1];
         return lastCard.Rank == card.Rank + 1 && lastCard.Color != card.Color;
     }
 
     public Location GetNextCardLocation()
     {
-        return new Location(PileType.TABLEAU, PileIndex, faceDownCards.Count + faceUpCards.Count, true);
+        return new Location(PileType.TABLEAU, PileIndex, Count, true);
     }
 
-    public (List<Card> poppedCards, Card? flippedCard) PopAllAfter(int combinedIndex)
+    public (List<Card> poppedCards, Card? flippedCard) PopAllAfter(int index)
     {
-        var index = combinedIndex - faceDownCards.Count;
-        var cards = faceUpCards.GetRange(index, faceUpCards.Count - index);
-        faceUpCards.RemoveRange(index, faceUpCards.Count - index);
-        Card? flippedCard = null;
-        if (faceUpCards.Count == 0 && faceDownCards.Count > 0)
+        var cards = GetRange(index, Count - index);
+        RemoveRange(index, Count - index);
+        if (Count > 0)
         {
-            faceUpCards.Add(faceDownCards[faceDownCards.Count - 1]);
-            faceDownCards.RemoveAt(faceDownCards.Count - 1);
+            _faceDownCount = Math.Min(_faceDownCount, Count - 1);
         }
-        return (cards, flippedCard);
+        return (cards, null);
     }
 
     public void PushAllOnto(List<Card> cards)
     {
-        faceUpCards.AddRange(cards);
+        foreach (var card in cards)
+        {
+            PushFaceUp(card);
+        }
     }
 
     public IEnumerable<(Card card, Location source)> GetMovableCards()
     {
-        for (int i = 0; i < faceUpCards.Count; i++)
+        for (int i = _faceDownCount; i < Count; i++)
         {
-            yield return (faceUpCards[i], new Location(PileType.TABLEAU, PileIndex, faceDownCards.Count + i, true));
+            yield return (this[i], new Location(PileType.TABLEAU, PileIndex, i, true));
         }
     }
 }

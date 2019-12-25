@@ -235,13 +235,13 @@ public class SolitairePacker
         for (int j = 1; j < 7; j++)
         {
             var pile = solitaire.tableau.piles[j];
-            pile.faceDownCards.Clear();
+            pile.Clear();
             for (int k = 0; k < j; k++)
             {
                 byte b = bytes[i++];
                 if (b != 0)
                 {
-                    pile.faceDownCards.Add(Card.FromByte(b));
+                    pile.PushFaceDown(Card.FromByte(b));
                 }
             }
         }
@@ -250,13 +250,12 @@ public class SolitairePacker
         for (int j = 0; j < 7; j++)
         {
             var pile = solitaire.tableau.piles[j];
-            pile.faceUpCards.Clear();
             for (int k = 0; k < 13; k++)
             {
                 byte b = bytes[i++];
                 if (b != 0)
                 {
-                    pile.faceUpCards.Add(Card.FromByte(b));
+                    pile.PushFaceUp(Card.FromByte(b));
                 }
             }
         }
@@ -323,9 +322,9 @@ public class SolitairePacker
         {
             var pile = solitaire.tableau.piles[j];
             int k = 0;
-            for (; k < pile.faceDownCards.Count; k++)
+            for (; k < pile.FaceDownCount; k++)
             {
-                slots[i++] = pile.faceDownCards[k].ToByte();
+                slots[i++] = pile[k].ToByte();
             }
             for (; k < j; k++)
             {
@@ -337,12 +336,12 @@ public class SolitairePacker
         for (int j = 0; j < 7; j++)
         {
             var pile = solitaire.tableau.piles[j];
-            int k = 0;
-            for (; k < pile.faceUpCards.Count; k++)
+            int k = pile.FaceDownCount;
+            for (; k < pile.Count; k++)
             {
-                slots[i++] = pile.faceUpCards[k].ToByte();
+                slots[i++] = pile[k].ToByte();
             }
-            for (; k < 13; k++)
+            for (; k < pile.FaceDownCount + 13; k++)
             {
                 slots[i++] = 0;
             }
@@ -487,7 +486,7 @@ public class Solitaire
             return 10;
         }
         // it's always good to uncover cards in the tableau
-        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order > 0 && move.Source.Order == tableau.piles[move.Source.PileIndex].faceDownCards.Count)
+        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order > 0 && move.Source.Order == tableau.piles[move.Source.PileIndex].FaceDownCount)
         {
             return 10;
         }
@@ -497,9 +496,9 @@ public class Solitaire
         {
             foreach (var pile in tableau.piles)
             {
-                if (pile.faceUpCards.Count > 0)
+                if (pile.Count > 0 && pile.FaceDownCount < pile.Count)
                 {
-                    var faceUpCard = pile.faceUpCards[0];
+                    var faceUpCard = pile[pile.FaceDownCount];
                     if (move.Card.Color != faceUpCard.Color && move.Card.Rank == faceUpCard.Rank + 1)
                     {
                         return 9;
@@ -711,16 +710,17 @@ public class Solitaire
         foreach (var pile in tableau.piles)
         {
             List<string> cards = new List<string>();
-            foreach (var card in pile.faceDownCards)
+            int i = 0;
+            for (; i < pile.FaceDownCount; i++)
             {
-                cards.Add(card.Id);
+                cards.Add(pile[i].Id);
             }
             json.tableauFaceDown.Add(cards);
 
             cards = new List<string>();
-            foreach (var card in pile.faceUpCards)
+            for (; i < pile.Count; i++)
             {
-                cards.Add(card.Id);
+                cards.Add(pile[i].Id);
             }
             json.tableauFaceUp.Add(cards);
         }
@@ -735,7 +735,7 @@ public class Solitaire
         }
         foreach (var pile in tableau.piles)
         {
-            if (pile.faceUpCards.Count + pile.faceDownCards.Count > 0)
+            if (pile.Count > 0)
             {
                 return false;
             }
