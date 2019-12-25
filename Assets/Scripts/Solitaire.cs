@@ -146,6 +146,7 @@ public struct Location
     }
 }
 
+[Serializable]
 public struct LocatedCard
 {
     public Card Card;
@@ -430,6 +431,25 @@ public class Solitaire
     public List<CardMovement> DealAll()
     {
         return new List<CardMovement>(Deal());
+    }
+
+    public IEnumerable<LocatedCard> AllCards()
+    {
+        foreach (var pile in AllPiles())
+        {
+            foreach (var locatedCard in pile.LocatedCards())
+            {
+                yield return locatedCard;
+            }
+        }
+    }
+
+    public IEnumerable<CardPile> AllPiles()
+    {
+        yield return stockPile.stock;
+        yield return stockPile.waste;
+        foreach (var pile in foundations) { yield return pile; }
+        foreach (var pile in tableau.piles) { yield return pile; }
     }
 
     public List<CardMovement> GetPossibleMovesForCard(Card card, Location source)

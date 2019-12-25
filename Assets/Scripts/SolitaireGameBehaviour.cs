@@ -89,15 +89,14 @@ public class SolitaireGameBehaviour : MonoBehaviour
         foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
         {
             CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab);
-            cardGameObject.transform.position = GetPositionForCardLocation(cardGameObject.cardLocation);
             cardGameObject.locatedCard = locatedCard;
+            cardGameObject.transform.position = GetPositionForCardLocation(locatedCard.Location);
             cardGameObject.name = locatedCard.Card.ToString();
             cardsById[locatedCard.Card.Id] = cardGameObject;
             i++;
         }
         Validate();
     }
-
 
     public void NewGame()
     {
@@ -115,6 +114,30 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
         Validate();
         state = GameState.Resetting;
+    }
+
+    public void UndoMove()
+    {
+        // TODO: implement this j0nx
+        var undone = new Solitaire(solitaire.RandomSeed);
+        undone.DealAll();
+        for (int i = 0; i < solitaire.moveHistory.Count - 1; i++)
+        {
+            undone.PerformMove(solitaire.moveHistory[i]);
+        }
+        solitaire = undone;
+
+        foreach (var locatedCard in solitaire.AllCards())
+        {
+            var cardGameObject = cardsById[locatedCard.Card.Id];
+            if (!cardGameObject.locatedCard.Equals(locatedCard))
+            {
+                cardGameObject.transform.parent = null;
+                cardGameObject.locatedCard = locatedCard;
+                cardGameObject.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
+            }
+        }
+        Validate();
     }
 
     public Vector3 GetPositionForCardLocation(Location location)
@@ -529,7 +552,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             foreach (var card in solitaire.stockPile.waste)
             {
                 var location = cardsById[card.Id].cardLocation;
-                AssertIsTrue(location.PileType == PileType.WASTE, $"{card}: Wrong Pile");
+                AssertIsTrue(location.PileType == PileType.WASTE, $"{card}: Wrong Pile {location.PileType}. Expected {PileType.WASTE}");
                 AssertIsTrue(location.PileIndex == 0, $"{card}: Wrong pile index");
                 AssertIsTrue(location.FaceUp == true, $"{card}: Cards in waste pile should all be face up.");
                 AssertIsTrue(location.Order == order, $"{card}: should be in the correct order: {order} (was {location.Order}).");
