@@ -69,8 +69,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public bool debugPossibleMoves = false;
     List<MoveLineBehaviour> possibleMoveLines = new List<MoveLineBehaviour>();
 
-    public float moveDuration = .1f;
-
     Queue<CardMovement> moveQueue = new Queue<CardMovement>();
     public GameState state = GameState.Init;
 
@@ -118,7 +116,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardGameObject.cardLocation = location;
             cardGameObject.card = card;
             cardGameObject.SetFaceUp(false);
-            cardGameObject.Move.MoveTo(GetPositionForCardLocation(location), .1f, location.Order);
+            cardGameObject.Move.MoveTo(GetPositionForCardLocation(location));
             i++;
         }
         Validate();
@@ -188,7 +186,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 cardBeingMoved = cardsById[solitaire.stockPile.stock[i].Id];
                 cardBeingMoved.SetFaceUp(false);
                 cardBeingMoved.cardLocation = new Location(PileType.STOCK, 0, i, false);
-                cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation), moveDuration, cardBeingMoved.cardLocation.Order);
+                cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation));
             }
         }
         else if (move.Type == MoveType.SingleCard)
@@ -196,7 +194,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardBeingMoved = cardsById[move.Card.Id];
             cardBeingMoved.transform.parent = null;
             cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
-            cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.Destination), moveDuration, move.Destination.Order);
+            cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.Destination));
             cardBeingMoved.cardLocation = move.Destination;
 
             if (move.Destination.PileType == PileType.TABLEAU)
