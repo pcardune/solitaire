@@ -31,7 +31,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public float GameDuration { get; private set; }
 
 
-    Dictionary<string, CardBehaviour> cards = new Dictionary<string, CardBehaviour>();
+    Dictionary<string, CardBehaviour> cardsById = new Dictionary<string, CardBehaviour>();
 
     List<CardTarget> cardTargets = new List<CardTarget>();
     public CardTarget SelectedCardTarget
@@ -97,7 +97,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardGameObject.name = card.ToString();
             cardGameObject.faceUp = false;
             cardGameObject.solitaireGameBehaviour = this;
-            cards[card.Id] = cardGameObject;
+            cardsById[card.Id] = cardGameObject;
             i++;
         }
         Validate();
@@ -112,7 +112,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         int i = 0;
         foreach (Card card in solitaire.stockPile.stock)
         {
-            var cardGameObject = cards[card.Id];
+            var cardGameObject = cardsById[card.Id];
             var location = new Location(PileType.STOCK, 0, i, false);
             cardGameObject.transform.parent = null;
             cardGameObject.cardLocation = location;
@@ -185,7 +185,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             for (int i = 0; i < solitaire.stockPile.stock.Count; i++)
             {
-                cardBeingMoved = cards[solitaire.stockPile.stock[i].Id];
+                cardBeingMoved = cardsById[solitaire.stockPile.stock[i].Id];
                 cardBeingMoved.SetFaceUp(false);
                 cardBeingMoved.cardLocation = new Location(PileType.STOCK, 0, i, false);
                 cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation), moveDuration, cardBeingMoved.cardLocation.Order);
@@ -193,7 +193,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
         else if (move.Type == MoveType.SingleCard)
         {
-            cardBeingMoved = cards[move.Card.Id];
+            cardBeingMoved = cardsById[move.Card.Id];
             cardBeingMoved.transform.parent = null;
             cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
             cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.Destination), moveDuration, move.Destination.Order);
@@ -205,12 +205,12 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 int order = pile.faceDownCards.Count + 1;
                 for (int i = 1; i < pile.faceUpCards.Count; i++)
                 {
-                    var cardBehaviour = cards[pile.faceUpCards[i].Id];
+                    var cardBehaviour = cardsById[pile.faceUpCards[i].Id];
                     var location = move.Destination;
                     location.Order = order;
                     cardBehaviour.cardLocation = location;
                     order++;
-                    var parentCard = cards[pile.faceUpCards[i - 1].Id];
+                    var parentCard = cardsById[pile.faceUpCards[i - 1].Id];
                     cardBehaviour.transform.parent = parentCard.transform;
                 }
             }
@@ -218,7 +218,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             {
                 foreach (var card in solitaire.tableau.piles[move.Source.PileIndex].faceUpCards)
                 {
-                    var otherCardToMove = cards[card.Id];
+                    var otherCardToMove = cardsById[card.Id];
                     otherCardToMove.cardLocation.FaceUp = true;
                     otherCardToMove.SetFaceUp(true);
                 }
@@ -240,7 +240,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         if (state == GameState.Resetting)
         {
             var stillMoving = false;
-            foreach (var card in cards.Values)
+            foreach (var card in cardsById.Values)
             {
                 if (card.Move.IsMoving)
                 {
@@ -474,7 +474,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             Card? lastCard = null;
             foreach (var card in pile)
             {
-                var location = cards[card.Id].cardLocation;
+                var location = cardsById[card.Id].cardLocation;
                 AssertIsTrue(location.PileType == PileType.FOUNDATION, $"{card}: Wrong Pile: {location.PileType}");
                 AssertIsTrue(location.PileIndex == pileIndex, $"{card}: Wrong pile index");
                 AssertIsTrue(location.FaceUp == true, $"{card}: Cards in foundation should all be face up.");
@@ -500,7 +500,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             int order = 0;
             foreach (var card in pile.faceDownCards)
             {
-                var location = cards[card.Id].cardLocation;
+                var location = cardsById[card.Id].cardLocation;
                 AssertIsTrue(location.PileType == PileType.TABLEAU, $"{card}: Wrong Pile. Expected: {PileType.TABLEAU} Got: {location.PileType}");
                 AssertIsTrue(location.PileIndex == pileIndex, $"{card}: Wrong pile index");
                 AssertIsTrue(location.FaceUp == false, $"{card}: Cards in tableau facedown pile should all be face down.");
@@ -510,7 +510,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             Card? lastCard = null;
             foreach (var card in pile.faceUpCards)
             {
-                var location = cards[card.Id].cardLocation;
+                var location = cardsById[card.Id].cardLocation;
                 AssertIsTrue(location.PileType == PileType.TABLEAU, $"{card}: Wrong Pile");
                 AssertIsTrue(location.PileIndex == pileIndex, $"{card}: Wrong pile index");
                 AssertIsTrue(location.FaceUp == true, $"{card}: Cards in tableau faceup pile should all be face up.");
@@ -530,7 +530,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             int order = 0;
             foreach (var card in solitaire.stockPile.waste)
             {
-                var location = cards[card.Id].cardLocation;
+                var location = cardsById[card.Id].cardLocation;
                 AssertIsTrue(location.PileType == PileType.WASTE, $"{card}: Wrong Pile");
                 AssertIsTrue(location.PileIndex == 0, $"{card}: Wrong pile index");
                 AssertIsTrue(location.FaceUp == true, $"{card}: Cards in waste pile should all be face up.");
@@ -543,7 +543,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             int order = 0;
             foreach (var card in solitaire.stockPile.stock)
             {
-                var location = cards[card.Id].cardLocation;
+                var location = cardsById[card.Id].cardLocation;
                 AssertIsTrue(location.PileType == PileType.STOCK, $"{card}: Wrong Pile");
                 AssertIsTrue(location.PileIndex == 0, $"{card}: Wrong pile index");
                 AssertIsTrue(location.FaceUp == false, $"{card}: Cards in stock pile should all be face down.");
