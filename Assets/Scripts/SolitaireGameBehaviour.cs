@@ -86,15 +86,14 @@ public class SolitaireGameBehaviour : MonoBehaviour
         solitaire = new Solitaire(RandomSeedToUse);
         GameDuration = 0;
         int i = 0;
-        foreach (Card card in solitaire.stockPile.stock)
+        foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
         {
             CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab);
-            cardGameObject.cardLocation = new Location(PileType.STOCK, 0, i, false);
             cardGameObject.transform.position = GetPositionForCardLocation(cardGameObject.cardLocation);
-            cardGameObject.card = card;
-            cardGameObject.name = card.ToString();
+            cardGameObject.locatedCard = locatedCard;
+            cardGameObject.name = locatedCard.Card.ToString();
             cardGameObject.solitaireGameBehaviour = this;
-            cardsById[card.Id] = cardGameObject;
+            cardsById[locatedCard.Card.Id] = cardGameObject;
             i++;
         }
         Validate();
@@ -107,14 +106,12 @@ public class SolitaireGameBehaviour : MonoBehaviour
         solitaire = new Solitaire(RandomSeedToUse);
         GameDuration = 0;
         int i = 0;
-        foreach (Card card in solitaire.stockPile.stock)
+        foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
         {
-            var cardGameObject = cardsById[card.Id];
-            var location = new Location(PileType.STOCK, 0, i, false);
+            var cardGameObject = cardsById[locatedCard.Card.Id];
             cardGameObject.transform.parent = null;
-            cardGameObject.cardLocation = location;
-            cardGameObject.card = card;
-            cardGameObject.Move.MoveTo(GetPositionForCardLocation(location));
+            cardGameObject.locatedCard = locatedCard;
+            cardGameObject.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
             i++;
         }
         Validate();
@@ -184,7 +181,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
             {
                 cardBeingMoved = cardsById[locatedCard.Card.Id];
-                cardBeingMoved.cardLocation = locatedCard.Location;
+                cardBeingMoved.locatedCard = locatedCard;
                 cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation));
             }
         }
@@ -193,7 +190,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardBeingMoved = cardsById[move.Card.Id];
             cardBeingMoved.transform.parent = null;
             cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.Destination));
-            cardBeingMoved.cardLocation = move.Destination;
+            cardBeingMoved.locatedCard = new LocatedCard(move.Card, move.Destination);
 
             // Update parents of all the cards in the destination pile
             // so that they get dragged appropriately
@@ -204,7 +201,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 foreach (var locatedCard in pile.LocatedCards())
                 {
                     var cardBehaviour = cardsById[locatedCard.Card.Id];
-                    cardBehaviour.cardLocation = locatedCard.Location;
+                    cardBehaviour.locatedCard = locatedCard;
                     if (parent != null && parent.cardLocation.FaceUp == true)
                     {
                         cardBehaviour.transform.parent = parent.transform;
@@ -219,7 +216,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 foreach (var locatedCard in pile.LocatedCards())
                 {
                     var otherCardToMove = cardsById[locatedCard.Card.Id];
-                    otherCardToMove.cardLocation = locatedCard.Location;
+                    otherCardToMove.locatedCard = locatedCard;
                 }
             }
         }

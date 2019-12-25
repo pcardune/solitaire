@@ -55,9 +55,12 @@ public class CardSpriteManager
 [RequireComponent(typeof(DragBehaviour)), RequireComponent(typeof(MoveBehaviour))]
 public class CardBehaviour : MonoBehaviour
 {
-    public Card card;
 
-    public Location cardLocation;
+    public LocatedCard locatedCard;
+
+    public Card card { get { return locatedCard.Card; } }
+
+    public Location cardLocation { get { return locatedCard.Location; } }
 
     public SolitaireGameBehaviour solitaireGameBehaviour;
 
