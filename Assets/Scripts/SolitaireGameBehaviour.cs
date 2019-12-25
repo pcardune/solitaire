@@ -93,7 +93,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardGameObject.transform.position = GetPositionForCardLocation(cardGameObject.cardLocation);
             cardGameObject.card = card;
             cardGameObject.name = card.ToString();
-            cardGameObject.faceUp = false;
             cardGameObject.solitaireGameBehaviour = this;
             cardsById[card.Id] = cardGameObject;
             i++;
@@ -115,7 +114,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardGameObject.transform.parent = null;
             cardGameObject.cardLocation = location;
             cardGameObject.card = card;
-            cardGameObject.SetFaceUp(false);
             cardGameObject.Move.MoveTo(GetPositionForCardLocation(location));
             i++;
         }
@@ -184,7 +182,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
             for (int i = 0; i < solitaire.stockPile.stock.Count; i++)
             {
                 cardBeingMoved = cardsById[solitaire.stockPile.stock[i].Id];
-                cardBeingMoved.SetFaceUp(false);
                 cardBeingMoved.cardLocation = new Location(PileType.STOCK, 0, i, false);
                 cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(cardBeingMoved.cardLocation));
             }
@@ -193,7 +190,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             cardBeingMoved = cardsById[move.Card.Id];
             cardBeingMoved.transform.parent = null;
-            cardBeingMoved.SetFaceUp(move.Destination.FaceUp);
             cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.Destination));
             cardBeingMoved.cardLocation = move.Destination;
 
@@ -220,7 +216,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
                     var card = pile[i];
                     var otherCardToMove = cardsById[card.Id];
                     otherCardToMove.cardLocation.FaceUp = true;
-                    otherCardToMove.SetFaceUp(true);
                 }
             }
         }

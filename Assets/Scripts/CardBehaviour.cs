@@ -61,8 +61,6 @@ public class CardBehaviour : MonoBehaviour
 
     public SolitaireGameBehaviour solitaireGameBehaviour;
 
-    public bool faceUp = true;
-
     public float dragDelay = 0.5f;
 
     float dragStart;
@@ -94,21 +92,10 @@ public class CardBehaviour : MonoBehaviour
         moveBehaviour = GetComponent<MoveBehaviour>();
     }
 
-    void Start()
-    {
-        SetFaceUp(faceUp);
-    }
-
     // Update is called once per frame
     void Update()
     {
-
-    }
-
-    public void SetFaceUp(bool isFaceUp)
-    {
-        faceUp = isFaceUp;
-        if (faceUp)
+        if (cardLocation.FaceUp)
         {
             spriteRenderer.sprite = CardSpriteManager.Load().GetSpriteForCard(card);
         }
