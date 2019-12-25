@@ -393,10 +393,12 @@ public class Solitaire
     CardMovement smartMoveCache;
 
     public List<CardMovement> moveHistory = new List<CardMovement>();
+    public int RandomSeed { get; private set; }
 
     public Solitaire(int randomSeed)
     {
-        stockPile = new StockAndWastePile(randomSeed);
+        RandomSeed = randomSeed;
+        stockPile = new StockAndWastePile(RandomSeed);
         for (int i = 0; i < 4; i++)
         {
             foundations.Add(new FoundationPile(i));
@@ -464,7 +466,7 @@ public class Solitaire
                 {
                     if (pile.CanPushCardOntoPile(card))
                     {
-                        var move = new CardMovement(card, source, pile.GetNextCardLocation());
+                        var move = new CardMovement(card, source, pile.GetDropCardLocation());
                         moves.Add(move);
                     }
                 }

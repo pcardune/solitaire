@@ -6,11 +6,12 @@ using UnityEngine;
 [Serializable]
 public class FoundationPile : CardPile
 {
+
     public FoundationPile(int pileIndex) : base(PileType.FOUNDATION, pileIndex, 0) { }
 
     public Location Push(Card card)
     {
-        var destination = GetNextCardLocation();
+        var destination = GetDropCardLocation();
         Add(card);
         return destination;
     }
@@ -23,10 +24,5 @@ public class FoundationPile : CardPile
         }
         var lastCard = this[Count - 1];
         return lastCard.Rank == card.Rank - 1 && lastCard.Suit == card.Suit;
-    }
-
-    public Location GetNextCardLocation()
-    {
-        return new Location(PileType.FOUNDATION, PileIndex, Count, true);
     }
 }
