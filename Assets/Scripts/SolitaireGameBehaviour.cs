@@ -12,6 +12,7 @@ public enum GameState
     Dealing,
     Playing,
     Resetting,
+    Finished,
 }
 public class SolitaireGameBehaviour : MonoBehaviour
 {
@@ -301,6 +302,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 if (solitaire.IsGameOver())
                 {
                     winText.gameObject.SetActive(true);
+                    state = GameState.Finished;
                 }
             }
             if (cardBeingMoved == null)
@@ -312,7 +314,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 }
                 else if (AutoPlay && solitaire.moveHistory.Count < MaxAutoPlayMoves)
                 {
-                    MakeRandomMove();
+                    MakeAutoPlayMove();
                 }
             }
         }
@@ -329,6 +331,16 @@ public class SolitaireGameBehaviour : MonoBehaviour
             if (moves.Count > 0 && cardBehaviour.Drag.DragDuration < 0.5f)
             {
                 move = moves[0];
+                var maxScore = solitaire.GetScoreForMove(move);
+                for (int i = 0; i < moves.Count; i++)
+                {
+                    var score = solitaire.GetScoreForMove(moves[i]);
+                    if (score > maxScore)
+                    {
+                        maxScore = score;
+                        move = moves[i];
+                    }
+                }
             }
 
         }
@@ -388,10 +400,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
         AutoPlay = !AutoPlay;
     }
 
-    public void MakeRandomMove()
+    public void MakeAutoPlayMove()
     {
         var move = solitaire.GetSmartMove(random);
-        Debug.Log("Performing random move: " + move);
+        Debug.Log("Performing smart move: " + move);
         PerformAndAnimateMove(move);
     }
 
@@ -419,12 +431,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             var moves = solitaire.GetAllPossibleMoves();
             var randomMove = solitaire.GetSmartMove(random);
-            // var s = "Found the following possible moves:\n";
-            // for (int i = 0; i < moves.Count; i++)
-            // {
-            //     s += "  " + i + ". " + moves[i].ToString() + "\n";
-            // }
-            // Debug.Log(s);
 
             var lineIndex = 0;
             foreach (var move in moves)
