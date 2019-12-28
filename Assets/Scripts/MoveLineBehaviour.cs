@@ -7,8 +7,6 @@ using UnityEngine;
 public class MoveLineBehaviour : MonoBehaviour
 {
     public CardMovement Move;
-    public SolitaireGameBehaviour solitaireGameBehaviour;
-
     ArrowBehaviour arrow;
 
     public bool Highlight = false;
@@ -23,8 +21,8 @@ public class MoveLineBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var start = solitaireGameBehaviour.GetPositionForCardLocation(Move.Source) + new Vector3(0, 0, -1);
-        var end = solitaireGameBehaviour.GetPositionForCardLocation(Move.Destination) + new Vector3(0, 0, -1);
+        var start = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(Move.Source) + new Vector3(0, 0, -1);
+        var end = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(Move.Destination) + new Vector3(0, 0, -1);
         arrow.StartPos = start;
         arrow.EndPos = end;
 
@@ -45,7 +43,7 @@ public class MoveLineBehaviour : MonoBehaviour
 
     public void OnClick()
     {
-        solitaireGameBehaviour.PerformAndAnimateMove(Move);
+        SolitaireGameBehaviour.Instance.PerformAndAnimateMove(Move);
     }
 
 }

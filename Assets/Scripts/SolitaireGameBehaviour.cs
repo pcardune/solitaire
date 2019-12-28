@@ -444,7 +444,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 else
                 {
                     line = Instantiate(lineRendererPrefab).GetComponent<MoveLineBehaviour>();
-                    line.solitaireGameBehaviour = this;
                     possibleMoveLines.Add(line);
                 }
                 line.gameObject.SetActive(true);
