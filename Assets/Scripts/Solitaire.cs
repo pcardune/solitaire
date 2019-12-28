@@ -34,10 +34,14 @@ public struct Card
     [Range(1, 13)]
     public int Rank;
 
-    public Card(Suit aSuit, int aValue)
+    public Card(Suit aSuit, int aRank)
     {
+        if (aRank < 1 || aRank > 13)
+        {
+            throw new ArgumentOutOfRangeException("aRank", aRank, "Card rank must be between 1 and 13 inclusive.");
+        }
         Suit = aSuit;
-        Rank = aValue;
+        Rank = aRank;
         if (Suit == Suit.Spades || Suit == Suit.Clubs)
         {
             Color = CardColor.BLACK;
@@ -57,7 +61,7 @@ public struct Card
     {
         get
         {
-            return Rank + "-" + Suit;
+            return Rank + "-" + (int)Suit;
         }
     }
 
@@ -77,7 +81,7 @@ public struct Card
         {
             throw new ArgumentOutOfRangeException("b", b, "valid card bytes should be between 1 and 52 inclusive.");
         }
-        return new Card((Suit)(b / 13), b % 13);
+        return new Card((Suit)((b - 1) / 13), (b - 1) % 13 + 1);
     }
 }
 
