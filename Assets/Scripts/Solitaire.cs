@@ -109,20 +109,6 @@ public class Deck
     }
 }
 
-
-[Serializable]
-public class Tableau
-{
-    public List<TableauPile> piles = new List<TableauPile>();
-    public Tableau()
-    {
-        for (int i = 0; i < 7; i++)
-        {
-            piles.Add(new TableauPile(i));
-        }
-    }
-}
-
 public enum PileType
 {
     STOCK,
@@ -254,7 +240,7 @@ public class SolitairePacker
         // unpack tableau facedown
         for (int j = 1; j < 7; j++)
         {
-            var pile = solitaire.tableau.piles[j];
+            var pile = solitaire.tableauPiles[j];
             pile.Clear();
             for (int k = 0; k < j; k++)
             {
@@ -269,7 +255,7 @@ public class SolitairePacker
         // unpack tableau faceup
         for (int j = 0; j < 7; j++)
         {
-            var pile = solitaire.tableau.piles[j];
+            var pile = solitaire.tableauPiles[j];
             for (int k = 0; k < 13; k++)
             {
                 byte b = bytes[i++];
@@ -340,7 +326,7 @@ public class SolitairePacker
         // pack tableau face down
         for (int j = 1; j < 7; j++)
         {
-            var pile = solitaire.tableau.piles[j];
+            var pile = solitaire.tableauPiles[j];
             int k = 0;
             for (; k < pile.FaceDownCount; k++)
             {
@@ -355,7 +341,7 @@ public class SolitairePacker
         // pack tableau face up
         for (int j = 0; j < 7; j++)
         {
-            var pile = solitaire.tableau.piles[j];
+            var pile = solitaire.tableauPiles[j];
             int k = pile.FaceDownCount;
             for (; k < pile.Count; k++)
             {
@@ -403,9 +389,9 @@ public class SolitairePacker
 public class Solitaire
 {
     public StockAndWastePile stockPile;
-    public Tableau tableau = new Tableau();
 
     public List<FoundationPile> foundations = new List<FoundationPile>();
+    public List<TableauPile> tableauPiles = new List<TableauPile>();
 
     List<CardMovement> possibleMovesCache;
     CardMovement randomMoveCache;
@@ -422,13 +408,17 @@ public class Solitaire
         {
             foundations.Add(new FoundationPile(i));
         }
+        for (int i = 0; i < 7; i++)
+        {
+            tableauPiles.Add(new TableauPile(i));
+        }
     }
 
     public IEnumerable<CardMovement> Deal()
     {
-        for (int i = 0; i < tableau.piles.Count; i++)
+        for (int i = 0; i < tableauPiles.Count; i++)
         {
-            TableauPile pile = tableau.piles[i];
+            TableauPile pile = tableauPiles[i];
             for (int j = 0; j < i + 1; j++)
             {
                 var topCard = stockPile.stock.Pop();
@@ -468,7 +458,7 @@ public class Solitaire
         yield return stockPile.stock;
         yield return stockPile.waste;
         foreach (var pile in foundations) { yield return pile; }
-        foreach (var pile in tableau.piles) { yield return pile; }
+        foreach (var pile in tableauPiles) { yield return pile; }
     }
 
     public List<CardMovement> GetPossibleMovesForCard(LocatedCard locatedCard)
@@ -481,7 +471,7 @@ public class Solitaire
         }
         else if (locatedCard.Location.FaceUp)
         {
-            foreach (var pile in tableau.piles)
+            foreach (var pile in tableauPiles)
             {
                 if (pile.CanPushCardOntoPile(locatedCard.Card))
                 {
@@ -494,7 +484,7 @@ public class Solitaire
             {
                 maybeFoundation = false;
             }
-            if (locatedCard.Location.PileType == PileType.TABLEAU && tableau.piles[locatedCard.Location.PileIndex].GetNextCardLocation().Order - 1 != locatedCard.Location.Order)
+            if (locatedCard.Location.PileType == PileType.TABLEAU && tableauPiles[locatedCard.Location.PileIndex].GetNextCardLocation().Order - 1 != locatedCard.Location.Order)
             {
                 maybeFoundation = false;
             }
@@ -525,7 +515,7 @@ public class Solitaire
             return 10;
         }
         // it's always good to uncover cards in the tableau
-        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order > 0 && move.Source.Order == tableau.piles[move.Source.PileIndex].FaceDownCount)
+        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order > 0 && move.Source.Order == tableauPiles[move.Source.PileIndex].FaceDownCount)
         {
             return 10;
         }
@@ -533,7 +523,7 @@ public class Solitaire
         // it's always good to move a card onto the tableau from the waste if it allows a new card to be uncovered
         if (move.Destination.PileType == PileType.TABLEAU && move.Source.PileType == PileType.WASTE)
         {
-            foreach (var pile in tableau.piles)
+            foreach (var pile in tableauPiles)
             {
                 if (pile.Count > 0 && pile.FaceDownCount < pile.Count)
                 {
@@ -553,7 +543,7 @@ public class Solitaire
         }
 
         var numFaceDown = 0;
-        foreach (var pile in tableau.piles)
+        foreach (var pile in tableauPiles)
         {
             numFaceDown += pile.FaceDownCount;
         }
@@ -600,7 +590,7 @@ public class Solitaire
                 }
             }
 
-            foreach (var pile in tableau.piles)
+            foreach (var pile in tableauPiles)
             {
                 foreach (var movableCard in pile.GetMovableCards())
                 {
@@ -690,7 +680,7 @@ public class Solitaire
             if (move.Destination.PileType == PileType.TABLEAU)
             {
                 stockPile.waste.Pop();
-                tableau.piles[move.Destination.PileIndex].PushFaceUp(move.Card);
+                tableauPiles[move.Destination.PileIndex].PushFaceUp(move.Card);
                 return true;
             }
             if (move.Destination.PileType == PileType.FOUNDATION)
@@ -705,7 +695,7 @@ public class Solitaire
             if (move.Destination.PileType == PileType.TABLEAU)
             {
                 foundations[move.Source.PileIndex].Pop();
-                tableau.piles[move.Destination.PileIndex].PushFaceUp(move.Card);
+                tableauPiles[move.Destination.PileIndex].PushFaceUp(move.Card);
                 return true;
             }
             else if (move.Destination.PileType == PileType.FOUNDATION)
@@ -719,15 +709,15 @@ public class Solitaire
         {
             if (move.Destination.PileType == PileType.FOUNDATION)
             {
-                tableau.piles[move.Source.PileIndex].PopAllAfter(move.Source.Order);
+                tableauPiles[move.Source.PileIndex].PopAllAfter(move.Source.Order);
                 foundations[move.Destination.PileIndex].Push(move.Card);
                 return true;
 
             }
             else if (move.Destination.PileType == PileType.TABLEAU)
             {
-                (var cards, var flippedCard) = tableau.piles[move.Source.PileIndex].PopAllAfter(move.Source.Order);
-                tableau.piles[move.Destination.PileIndex].PushAllOnto(cards);
+                (var cards, var flippedCard) = tableauPiles[move.Source.PileIndex].PopAllAfter(move.Source.Order);
+                tableauPiles[move.Destination.PileIndex].PushAllOnto(cards);
                 return true;
             }
         }
@@ -772,7 +762,7 @@ public class Solitaire
             }
             json.foundations.Add(cards);
         }
-        foreach (var pile in tableau.piles)
+        foreach (var pile in tableauPiles)
         {
             List<string> cards = new List<string>();
             int i = 0;
@@ -808,7 +798,7 @@ public class Solitaire
         {
             return false;
         }
-        foreach (var pile in tableau.piles)
+        foreach (var pile in tableauPiles)
         {
             if (pile.Count > 0)
             {

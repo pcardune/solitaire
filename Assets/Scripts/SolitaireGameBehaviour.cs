@@ -242,7 +242,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             // so that they get dragged appropriately
             if (move.Destination.PileType == PileType.TABLEAU)
             {
-                var pile = solitaire.tableau.piles[move.Destination.PileIndex];
+                var pile = solitaire.tableauPiles[move.Destination.PileIndex];
                 CardBehaviour parent = null;
                 foreach (var locatedCard in pile.LocatedCards())
                 {
@@ -258,7 +258,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
             if (move.Source.PileType == PileType.TABLEAU)
             {
-                var pile = solitaire.tableau.piles[move.Source.PileIndex];
+                var pile = solitaire.tableauPiles[move.Source.PileIndex];
                 foreach (var locatedCard in pile.LocatedCards())
                 {
                     var otherCardToMove = cardsById[locatedCard.Card.Id];
@@ -540,9 +540,9 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
 
         // validate the tableau
-        for (int pileIndex = 0; pileIndex < solitaire.tableau.piles.Count; pileIndex++)
+        for (int pileIndex = 0; pileIndex < solitaire.tableauPiles.Count; pileIndex++)
         {
-            var pile = solitaire.tableau.piles[pileIndex];
+            var pile = solitaire.tableauPiles[pileIndex];
             int order = 0;
             int i = 0;
             for (; i < pile.FaceDownCount; i++)
