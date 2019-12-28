@@ -56,11 +56,11 @@ public class TableauPile : CardPile
         }
     }
 
-    public IEnumerable<(Card card, Location source)> GetMovableCards()
+    public IEnumerable<LocatedCard> GetMovableCards()
     {
         for (int i = _faceDownCount; i < Count; i++)
         {
-            yield return (this[i], new Location(PileType.TABLEAU, PileIndex, i, true));
+            yield return new LocatedCard(this[i], new Location(PileType.TABLEAU, PileIndex, i, true));
         }
     }
 }

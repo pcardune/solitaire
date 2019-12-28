@@ -198,6 +198,14 @@ public class CardMovement
         return "CardMovement(" + Card.ToString() + ", " + Source.ToString() + ", " + Destination.ToString() + ")";
     }
 }
+public class ScoredCardMovement : CardMovement
+{
+    public int Score;
+    public ScoredCardMovement(LocatedCard locatedCard, Location destination, int score, MoveType type = MoveType.SingleCard) : base(locatedCard, destination, type: type)
+    {
+        Score = score;
+    }
+}
 
 [Serializable]
 public class SolitaireJSON
@@ -452,30 +460,30 @@ public class Solitaire
         foreach (var pile in tableau.piles) { yield return pile; }
     }
 
-    public List<CardMovement> GetPossibleMovesForCard(Card card, Location source)
+    public List<CardMovement> GetPossibleMovesForCard(LocatedCard locatedCard)
     {
-        Debug.Log("Checking possible moves for " + card.ToString() + " at " + source);
+        Debug.Log("Checking possible moves for " + locatedCard.Card.ToString() + " at " + locatedCard.Location);
         List<CardMovement> moves = new List<CardMovement>();
-        if (source.PileType == PileType.STOCK)
+        if (locatedCard.Location.PileType == PileType.STOCK)
         {
-            moves.Add(new CardMovement(card, source, stockPile.waste.GetDropCardLocation()));
+            moves.Add(new CardMovement(locatedCard, stockPile.waste.GetDropCardLocation()));
         }
-        else if (source.FaceUp)
+        else if (locatedCard.Location.FaceUp)
         {
             foreach (var pile in tableau.piles)
             {
-                if (pile.CanPushCardOntoPile(card))
+                if (pile.CanPushCardOntoPile(locatedCard.Card))
                 {
-                    var move = new CardMovement(card, source, pile.GetNextCardLocation());
+                    var move = new CardMovement(locatedCard, pile.GetNextCardLocation());
                     moves.Add(move);
                 }
             }
             bool maybeFoundation = true;
-            if (source.PileType == PileType.FOUNDATION)
+            if (locatedCard.Location.PileType == PileType.FOUNDATION)
             {
                 maybeFoundation = false;
             }
-            if (source.PileType == PileType.TABLEAU && tableau.piles[source.PileIndex].GetNextCardLocation().Order - 1 != source.Order)
+            if (locatedCard.Location.PileType == PileType.TABLEAU && tableau.piles[locatedCard.Location.PileIndex].GetNextCardLocation().Order - 1 != locatedCard.Location.Order)
             {
                 maybeFoundation = false;
             }
@@ -483,16 +491,16 @@ public class Solitaire
             {
                 foreach (var pile in foundations)
                 {
-                    if (pile.CanPushCardOntoPile(card))
+                    if (pile.CanPushCardOntoPile(locatedCard.Card))
                     {
-                        var move = new CardMovement(card, source, pile.GetDropCardLocation());
+                        var move = new CardMovement(locatedCard, pile.GetDropCardLocation());
                         moves.Add(move);
                     }
                 }
             }
 
         }
-        Debug.Log("  ---> Found " + moves.Count + " possible moves for " + card);
+        Debug.Log("  ---> Found " + moves.Count + " possible moves for " + locatedCard.Card);
         return moves;
     }
 
@@ -548,11 +556,6 @@ public class Solitaire
         return 0;
     }
 
-    public List<CardMovement> GetPossibleMovesForCard((Card card, Location source) cardFromSource)
-    {
-        return GetPossibleMovesForCard(cardFromSource.card, cardFromSource.source);
-    }
-
     public List<CardMovement> GetAllPossibleMoves()
     {
         if (possibleMovesCache == null)
@@ -562,7 +565,7 @@ public class Solitaire
             {
                 if (pile.Count > 0)
                 {
-                    moves.AddRange(GetPossibleMovesForCard(pile.Peek().AsTuple()));
+                    moves.AddRange(GetPossibleMovesForCard(pile.Peek()));
                 }
             }
 

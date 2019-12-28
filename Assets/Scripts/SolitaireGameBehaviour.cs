@@ -323,12 +323,11 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void OnClickCard(CardBehaviour cardBehaviour)
     {
-        var location = cardBehaviour.cardLocation;
-        var card = cardBehaviour.card;
+        var locatedCard = cardBehaviour.locatedCard;
         CardMovement move = null;
         if (SelectedCardTarget == null)
         {
-            var moves = solitaire.GetPossibleMovesForCard(card, location);
+            var moves = solitaire.GetPossibleMovesForCard(locatedCard);
             if (moves.Count > 0 && cardBehaviour.Drag.DragDuration < 0.5f)
             {
                 move = moves[0];
@@ -347,7 +346,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
         else
         {
-            move = new CardMovement(card, location, SelectedCardTarget.cardLocation);
+            move = new CardMovement(locatedCard, SelectedCardTarget.cardLocation);
         }
         if (move != null)
         {
@@ -371,7 +370,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         if (!isDraggingCard)
         {
-            var moves = solitaire.GetPossibleMovesForCard(cardBehaviour.card, cardBehaviour.cardLocation);
+            var moves = solitaire.GetPossibleMovesForCard(cardBehaviour.locatedCard);
             foreach (var move in moves)
             {
                 var cardTarget = Instantiate(

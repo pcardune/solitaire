@@ -75,15 +75,15 @@ public class StockAndWastePile
         stock.AddRange(Deck.GetShuffledDeck(randomSeed));
     }
 
-    public IEnumerable<(Card card, Location source)> GetMovableCards()
+    public IEnumerable<LocatedCard> GetMovableCards()
     {
         if (waste.Count > 0)
         {
-            yield return (waste[waste.Count - 1], new Location(PileType.WASTE, 0, waste.Count - 1, true));
+            yield return new LocatedCard(waste[waste.Count - 1], new Location(PileType.WASTE, 0, waste.Count - 1, true));
         }
         if (stock.Count > 0)
         {
-            yield return (stock[stock.Count - 1], new Location(PileType.STOCK, 0, stock.Count - 1, false));
+            yield return new LocatedCard(stock[stock.Count - 1], new Location(PileType.STOCK, 0, stock.Count - 1, false));
         }
     }
 
