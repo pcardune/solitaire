@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Assertions;
@@ -105,32 +107,16 @@ public class SolitaireGameBehaviour : MonoBehaviour
         random = new System.Random(RandomSeedToUse);
         solitaire = new Solitaire(RandomSeedToUse);
         GameDuration = 0;
-        int i = 0;
-        foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
-        {
-            var cardGameObject = cardsById[locatedCard.Card.Id];
-            cardGameObject.transform.parent = null;
-            cardGameObject.locatedCard = locatedCard;
-            cardGameObject.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
-            i++;
-        }
+        MoveAllCardsToCurrentLocation();
         Validate();
         state = GameState.Resetting;
     }
 
-    public void UndoMove()
+    private void MoveAllCardsToCurrentLocation()
     {
-        // TODO: implement this j0nx
-        var undone = new Solitaire(solitaire.RandomSeed);
-        undone.DealAll();
-        for (int i = 0; i < solitaire.moveHistory.Count - 1; i++)
-        {
-            undone.PerformMove(solitaire.moveHistory[i]);
-        }
-        solitaire = undone;
-
         foreach (var locatedCard in solitaire.AllCards())
         {
+            Debug.Log($"move card {locatedCard.Card.Id}: {locatedCard.Card}");
             var cardGameObject = cardsById[locatedCard.Card.Id];
             if (!cardGameObject.locatedCard.Equals(locatedCard))
             {
@@ -139,7 +125,43 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 cardGameObject.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
             }
         }
+    }
+
+    public void UndoMove()
+    {
+        var undone = new Solitaire(solitaire.RandomSeed);
+        undone.DealAll();
+        for (int i = 0; i < solitaire.moveHistory.Count - 1; i++)
+        {
+            undone.PerformMove(solitaire.moveHistory[i]);
+        }
+        solitaire = undone;
+        MoveAllCardsToCurrentLocation();
         Validate();
+    }
+
+    public void SaveGame()
+    {
+        var bf = new BinaryFormatter();
+        FileStream file = File.Create(Application.persistentDataPath + "/gamesave.save");
+        var save = solitaire.ToBytes();
+        bf.Serialize(file, save);
+        file.Close();
+    }
+
+    public void LoadGame()
+    {
+        if (File.Exists(Application.persistentDataPath + "/gamesave.save"))
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream file = File.Open(Application.persistentDataPath + "/gamesave.save", FileMode.Open);
+            byte[] save = (byte[])bf.Deserialize(file);
+            file.Close();
+
+            solitaire = Solitaire.FromBytes(save);
+            MoveAllCardsToCurrentLocation();
+            state = GameState.Playing;
+        }
     }
 
     public Vector3 GetPositionForCardLocation(Location location)

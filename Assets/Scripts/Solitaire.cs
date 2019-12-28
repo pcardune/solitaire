@@ -784,6 +784,16 @@ public class Solitaire
         return json;
     }
 
+    public byte[] ToBytes()
+    {
+        return SolitairePacker.Pack(this);
+    }
+
+    public static Solitaire FromBytes(byte[] bytes)
+    {
+        return SolitairePacker.Unpack(bytes);
+    }
+
     public bool IsGameOver()
     {
         if (stockPile.stock.Count + stockPile.waste.Count > 0)
