@@ -6,10 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(ArrowBehaviour))]
 public class MoveLineBehaviour : MonoBehaviour
 {
-    public CardMovement Move;
+    public ScoredMove ScoredMove;
+    public bool Highlight;
     ArrowBehaviour arrow;
-
-    public bool Highlight = false;
 
     // Start is called before the first frame update
     void Start()
@@ -21,29 +20,30 @@ public class MoveLineBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var start = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(Move.Source) + new Vector3(0, 0, -1);
-        var end = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(Move.Destination) + new Vector3(0, 0, -1);
+        var start = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(ScoredMove.Move.Source) + new Vector3(0, 0, -1);
+        var end = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(ScoredMove.Move.Destination) + new Vector3(0, 0, -1);
         arrow.StartPos = start;
         arrow.EndPos = end;
 
+        float opacity = ScoredMove.Score / 10 / 2 + 0.5f;
         if (Highlight)
         {
-            arrow.SetColor(Color.red);
+            arrow.SetColor(new Color(1, 0, 0, opacity));
         }
         else
         {
-            arrow.SetColor(Color.yellow);
+            arrow.SetColor(new Color(0, 1, 1, opacity));
         }
     }
 
-    public void SetMove(CardMovement move)
+    public void SetScoredMove(ScoredMove scoredMove)
     {
-        Move = move;
+        ScoredMove = scoredMove;
     }
 
     public void OnClick()
     {
-        SolitaireGameBehaviour.Instance.PerformAndAnimateMove(Move);
+        SolitaireGameBehaviour.Instance.PerformAndAnimateMove(ScoredMove.Move);
     }
 
 }

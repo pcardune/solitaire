@@ -429,11 +429,11 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         if (debugPossibleMoves)
         {
-            var moves = solitaire.GetAllPossibleMoves();
+            // var moves = solitaire.GetAllPossibleMoves();
             var randomMove = solitaire.GetSmartMove(random);
 
             var lineIndex = 0;
-            foreach (var move in moves)
+            foreach (var scoredMove in solitaire.GetScoredMoves())
             {
                 MoveLineBehaviour line;
                 if (lineIndex < possibleMoveLines.Count - 1)
@@ -446,8 +446,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
                     possibleMoveLines.Add(line);
                 }
                 line.gameObject.SetActive(true);
-                line.SetMove(move);
-                line.Highlight = move == randomMove;
+                line.SetScoredMove(scoredMove);
+                line.Highlight = scoredMove.Move == randomMove;
                 lineIndex++;
             }
             for (; lineIndex < possibleMoveLines.Count; lineIndex++)

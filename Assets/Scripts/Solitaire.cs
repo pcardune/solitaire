@@ -198,11 +198,14 @@ public class CardMovement
         return "CardMovement(" + Card.ToString() + ", " + Source.ToString() + ", " + Destination.ToString() + ")";
     }
 }
-public class ScoredCardMovement : CardMovement
+public class ScoredMove
 {
     public int Score;
-    public ScoredCardMovement(LocatedCard locatedCard, Location destination, int score, MoveType type = MoveType.SingleCard) : base(locatedCard, destination, type: type)
+    public CardMovement Move;
+
+    public ScoredMove(CardMovement move, int score)
     {
+        Move = move;
         Score = score;
     }
 }
@@ -544,16 +547,16 @@ public class Solitaire
         // it's useless to move aces off the foundation
         if (move.Source.PileType == PileType.FOUNDATION && move.Card.Rank == Rank.ACE)
         {
-            return -1;
+            return 0;
         }
 
         // it's useless to move kings in the tableau when they are already at order 0
         if (move.Card.Rank == Rank.KING && move.Source.PileType == PileType.TABLEAU && move.Source.Order == 0 && move.Destination.PileType == PileType.TABLEAU)
         {
-            return -1;
+            return 0;
         }
 
-        return 0;
+        return 1;
     }
 
     public List<CardMovement> GetAllPossibleMoves()
@@ -592,6 +595,15 @@ public class Solitaire
         return possibleMovesCache;
     }
 
+    public IEnumerable<ScoredMove> GetScoredMoves()
+    {
+        var moves = GetAllPossibleMoves();
+        foreach (var move in moves)
+        {
+            yield return new ScoredMove(move, GetScoreForMove(move));
+        }
+    }
+
     public CardMovement GetRandomMove(System.Random random)
     {
         if (randomMoveCache == null)
@@ -606,24 +618,26 @@ public class Solitaire
     {
         if (smartMoveCache == null)
         {
-            List<CardMovement> movesToConsider = new List<CardMovement>();
-            int maxScore = int.MinValue;
-            var moves = GetAllPossibleMoves();
-            foreach (var move in moves)
+            List<ScoredMove> movesToConsider = new List<ScoredMove>();
+            var moves = GetScoredMoves();
+            ScoredMove bestMove = null;
+            foreach (var scoredMove in moves)
             {
-                var score = GetScoreForMove(move);
-                if (score == maxScore)
+                if (bestMove == null)
                 {
-                    movesToConsider.Add(move);
+                    bestMove = scoredMove;
                 }
-                else if (score > maxScore)
+                if (scoredMove.Score > bestMove.Score)
                 {
+                    bestMove = scoredMove;
                     movesToConsider.Clear();
-                    movesToConsider.Add(move);
-                    maxScore = score;
+                }
+                if (scoredMove.Score == bestMove.Score)
+                {
+                    movesToConsider.Add(scoredMove);
                 }
             }
-            smartMoveCache = movesToConsider[random.Next(0, movesToConsider.Count)];
+            smartMoveCache = movesToConsider[random.Next(0, movesToConsider.Count)].Move;
         }
         return smartMoveCache;
 
