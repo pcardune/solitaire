@@ -544,6 +544,26 @@ public class Solitaire
             return 7;
         }
 
+        var numFaceDown = 0;
+        foreach (var pile in tableau.piles)
+        {
+            numFaceDown += pile.FaceDownCount;
+        }
+        // once all cards have been revealed
+        if (numFaceDown == 0)
+        {
+            // it's useless to move cards around among the same type of pile
+            if (move.Source.PileType == move.Destination.PileType)
+            {
+                return 0;
+            }
+            // It's useless to move cards off the foundation once all cards have been revealed
+            if (move.Source.PileType == PileType.FOUNDATION)
+            {
+                return 0;
+            }
+        }
+
         // it's useless to move aces off the foundation
         if (move.Source.PileType == PileType.FOUNDATION && move.Card.Rank == Rank.ACE)
         {
