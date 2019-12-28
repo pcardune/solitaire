@@ -83,6 +83,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Application.targetFrameRate = 60;
         random = new System.Random(RandomSeedToUse);
         solitaire = new Solitaire(RandomSeedToUse);
         GameDuration = 0;
