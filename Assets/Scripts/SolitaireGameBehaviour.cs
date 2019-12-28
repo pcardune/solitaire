@@ -303,6 +303,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 if (solitaire.IsGameOver())
                 {
                     winText.gameObject.SetActive(true);
+                    AutoPlay = false;
                     state = GameState.Finished;
                 }
             }
