@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+[Serializable]
 public class CardPile : List<Card>
 {
     private PileType _pileType;

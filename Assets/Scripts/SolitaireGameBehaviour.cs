@@ -144,8 +144,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         var bf = new BinaryFormatter();
         FileStream file = File.Create(Application.persistentDataPath + "/gamesave.save");
-        var save = solitaire.ToBytes();
-        bf.Serialize(file, save);
+        bf.Serialize(file, solitaire);
         file.Close();
     }
 
@@ -155,10 +154,9 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             BinaryFormatter bf = new BinaryFormatter();
             FileStream file = File.Open(Application.persistentDataPath + "/gamesave.save", FileMode.Open);
-            byte[] save = (byte[])bf.Deserialize(file);
+            solitaire = (Solitaire)bf.Deserialize(file);
             file.Close();
 
-            solitaire = Solitaire.FromBytes(save);
             MoveAllCardsToCurrentLocation();
             state = GameState.Playing;
         }

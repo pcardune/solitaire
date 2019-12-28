@@ -163,6 +163,8 @@ public enum MoveType
     SingleCard,
     StockPileReset,
 }
+
+[Serializable]
 public class CardMovement
 {
     public Card Card;
@@ -393,8 +395,11 @@ public class Solitaire
     public List<FoundationPile> foundations = new List<FoundationPile>();
     public List<TableauPile> tableauPiles = new List<TableauPile>();
 
+    [NonSerialized]
     List<CardMovement> possibleMovesCache;
+    [NonSerialized]
     CardMovement randomMoveCache;
+    [NonSerialized]
     CardMovement smartMoveCache;
 
     public List<CardMovement> moveHistory = new List<CardMovement>();

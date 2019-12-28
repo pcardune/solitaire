@@ -18,11 +18,11 @@ public class StockAndWastePile
     {
         if (waste.Count > 0)
         {
-            yield return new LocatedCard(waste[waste.Count - 1], new Location(PileType.WASTE, 0, waste.Count - 1, true));
+            yield return waste.Peek();
         }
         if (stock.Count > 0)
         {
-            yield return new LocatedCard(stock[stock.Count - 1], new Location(PileType.STOCK, 0, stock.Count - 1, false));
+            yield return stock.Peek();
         }
     }
 
