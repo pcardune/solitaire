@@ -73,6 +73,10 @@ public struct Card
 
     public static Card FromByte(byte b)
     {
+        if (b < 1 || b > 52)
+        {
+            throw new ArgumentOutOfRangeException("b", b, "valid card bytes should be between 1 and 52 inclusive.");
+        }
         return new Card((Suit)(b / 13), b % 13);
     }
 }
