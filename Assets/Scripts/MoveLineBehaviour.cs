@@ -24,21 +24,21 @@ public class MoveLineBehaviour : MonoBehaviour
         var end = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(ScoredMove.Move.Destination) + new Vector3(0, 0, -1);
         arrow.StartPos = start;
         arrow.EndPos = end;
-
-        float opacity = ScoredMove.Score / 10 / 2 + 0.5f;
         if (Highlight)
         {
-            arrow.SetColor(new Color(1, 0, 0, opacity));
+            arrow.SetColor(new Color(1, 0, 0));
         }
         else
         {
-            arrow.SetColor(new Color(0, 1, 1, opacity));
+            arrow.SetColor(new Color(0, 1, 1));
         }
     }
 
     public void SetScoredMove(ScoredMove scoredMove)
     {
         ScoredMove = scoredMove;
+        var text = GetComponentInChildren<TMPro.TextMeshPro>();
+        text.text = "" + scoredMove.Score;
     }
 
     public void OnClick()
