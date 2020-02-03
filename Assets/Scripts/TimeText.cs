@@ -18,6 +18,11 @@ public class TimeText : MonoBehaviour
     void Update()
     {
         var dt = SolitaireGameBehaviour.Instance.GameDuration;
-        text.text = $"Time: {Math.Truncate(dt / 60)}:{Math.Truncate(dt % 60).ToString("00")}";
+        text.text = $"Time: {TimeText.FormatDuration(dt)}";
+    }
+
+    public static string FormatDuration(float dt)
+    {
+        return $"{Math.Truncate(dt / 60)}:{Math.Truncate(dt % 60).ToString("00")}";
     }
 }
