@@ -142,21 +142,16 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void SaveGame()
     {
-        var bf = new BinaryFormatter();
-        FileStream file = File.Create(Application.persistentDataPath + "/gamesave.save");
-        bf.Serialize(file, solitaire);
-        file.Close();
+        var gameRef = GameHistoryManager.Instance.CreateGame();
+        gameRef.Save(solitaire);
     }
 
     public void LoadGame()
     {
-        if (File.Exists(Application.persistentDataPath + "/gamesave.save"))
+        var gameRef = GameHistoryManager.Instance.GetMostRecentGame();
+        if (gameRef != null)
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            FileStream file = File.Open(Application.persistentDataPath + "/gamesave.save", FileMode.Open);
-            solitaire = (Solitaire)bf.Deserialize(file);
-            file.Close();
-
+            solitaire = gameRef.Load();
             MoveAllCardsToCurrentLocation();
             state = GameState.Playing;
         }
