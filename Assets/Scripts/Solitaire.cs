@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Linq;
 using UnityEngine;
 
 public enum Suit
@@ -75,6 +76,11 @@ public struct Card
         return (byte)((int)Suit * 13 + Rank);
     }
 
+    public bool Equals(Card other)
+    {
+        return ToByte() == other.ToByte();
+    }
+
     public static Card FromByte(byte b)
     {
         if (b < 1 || b > 52)
@@ -120,23 +126,28 @@ public enum PileType
 [Serializable]
 public struct Location
 {
-    public PileType PileType;
-    public int PileIndex;
-    public int Order;
+    public PileType pileType;
+    public int pileIndex;
+    public int order;
 
-    public bool FaceUp;
+    public bool faceUp;
 
     public Location(PileType pileType, int pileIndex, int order, bool faceUp)
     {
-        PileType = pileType;
-        PileIndex = pileIndex;
-        Order = order;
-        FaceUp = faceUp;
+        this.pileType = pileType;
+        this.pileIndex = pileIndex;
+        this.order = order;
+        this.faceUp = faceUp;
     }
 
     override public string ToString()
     {
-        return "" + PileType.ToString() + "_" + (PileIndex + 1) + "[" + (Order) + "]";
+        return "" + pileType.ToString() + "_" + (pileIndex + 1) + "[" + (order) + "]";
+    }
+
+    public bool Equals(Location other)
+    {
+        return pileType == other.pileType && pileIndex == other.pileIndex && order == other.order && faceUp == other.faceUp;
     }
 }
 
@@ -165,33 +176,48 @@ public enum MoveType
 }
 
 [Serializable]
-public class CardMovement
+public class CardMovement : IEquatable<CardMovement>
 {
-    public Card Card;
-    public Location Source;
-    public Location Destination;
+    public Card card;
+    public Location source;
+    public Location destination;
 
-    public MoveType Type;
+    public MoveType type;
 
     public CardMovement(Card card, Location source, Location destination, MoveType type = MoveType.SingleCard)
     {
-        Card = card;
-        Source = source;
-        Destination = destination;
-        Type = type;
+        this.card = card;
+        this.source = source;
+        this.destination = destination;
+        this.type = type;
     }
 
     public CardMovement(LocatedCard locatedCard, Location destination, MoveType type = MoveType.SingleCard)
     {
-        Card = locatedCard.Card;
-        Source = locatedCard.Location;
-        Destination = destination;
-        Type = type;
+        card = locatedCard.Card;
+        source = locatedCard.Location;
+        this.destination = destination;
+        this.type = type;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is CardMovement && Equals((CardMovement)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return ToString().GetHashCode();
+    }
+
+    public bool Equals(CardMovement other)
+    {
+        return card.Equals(other.card) && source.Equals(other.source) && destination.Equals(other.destination) && type.Equals(other.type);
     }
 
     override public string ToString()
     {
-        return "CardMovement(" + Card.ToString() + ", " + Source.ToString() + ", " + Destination.ToString() + ")";
+        return "CardMovement(" + card.ToString() + ", " + source.ToString() + ", " + destination.ToString() + ")";
     }
 }
 public class ScoredMove
@@ -216,8 +242,97 @@ public class SolitaireJSON
     public List<List<string>> foundations = new List<List<string>>();
 }
 
-public class SolitairePacker
+public class PackedSolitaire
 {
+    public Binary data;
+
+    public PackedSolitaire(Solitaire solitaire)
+    {
+        // slots:
+        //   foundation: 13 * 4 = 52
+        //   tableau face down: 0+1+2+3+4+5+6 = 21
+        //   tableau face up = 13*7 = 91
+        //   waste = 52 - 28 = 24
+        //   stock = 52 - 28 = 24
+        // total slots: 212
+        byte[] slots = new byte[219];
+        int i = 0; // slot index
+
+        // pack foundation
+        for (int j = 0; j < 4; j++)
+        {
+            var pile = solitaire.foundations[j];
+            int k = 0;
+            for (; k < pile.Count; k++)
+            {
+                slots[i++] = pile[k].ToByte();
+            }
+            for (; k < 13; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+
+        // pack tableau face down
+        for (int j = 1; j < 7; j++)
+        {
+            var pile = solitaire.tableauPiles[j];
+            int k = 0;
+            for (; k < pile.FaceDownCount; k++)
+            {
+                slots[i++] = pile[k].ToByte();
+            }
+            for (; k < j; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+
+        // pack tableau face up
+        for (int j = 0; j < 7; j++)
+        {
+            var pile = solitaire.tableauPiles[j];
+            int k = pile.FaceDownCount;
+            for (; k < pile.Count; k++)
+            {
+                slots[i++] = pile[k].ToByte();
+            }
+            for (; k < pile.FaceDownCount + 13; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+
+        // pack waste
+        {
+            var pile = solitaire.stockPile.waste;
+            int k = 0;
+            for (; k < pile.Count; k++)
+            {
+                slots[i++] = pile[k].ToByte();
+            }
+            for (; k < 24; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+        Debug.Log("Finished packing waste. byte offset: " + i);
+        // pack stock
+        {
+            var pile = solitaire.stockPile.stock;
+            int k = 0;
+            for (; k < pile.Count; k++)
+            {
+                slots[i++] = pile[k].ToByte();
+            }
+            for (; k < 24; k++)
+            {
+                slots[i++] = 0;
+            }
+        }
+        data = new Binary(slots);
+    }
+
     public static Solitaire Unpack(byte[] bytes)
     {
 
@@ -297,93 +412,18 @@ public class SolitairePacker
 
         return solitaire;
     }
+}
+
+public class SolitairePacker
+{
+    public static Solitaire Unpack(byte[] bytes)
+    {
+        return PackedSolitaire.Unpack(bytes);
+    }
 
     public static byte[] Pack(Solitaire solitaire)
     {
-        // slots:
-        //   foundation: 13 * 4 = 52
-        //   tableau face down: 0+1+2+3+4+5+6 = 21
-        //   tableau face up = 13*7 = 91
-        //   waste = 52 - 28 = 24
-        //   stock = 52 - 28 = 24
-        // total slots: 212
-        byte[] slots = new byte[219];
-        int i = 0;
-
-        // pack foundation
-        for (int j = 0; j < 4; j++)
-        {
-            var pile = solitaire.foundations[j];
-            int k = 0;
-            for (; k < pile.Count; k++)
-            {
-                slots[i++] = pile[k].ToByte();
-            }
-            for (; k < 13; k++)
-            {
-                slots[i++] = 0;
-            }
-        }
-
-        // pack tableau face down
-        for (int j = 1; j < 7; j++)
-        {
-            var pile = solitaire.tableauPiles[j];
-            int k = 0;
-            for (; k < pile.FaceDownCount; k++)
-            {
-                slots[i++] = pile[k].ToByte();
-            }
-            for (; k < j; k++)
-            {
-                slots[i++] = 0;
-            }
-        }
-
-        // pack tableau face up
-        for (int j = 0; j < 7; j++)
-        {
-            var pile = solitaire.tableauPiles[j];
-            int k = pile.FaceDownCount;
-            for (; k < pile.Count; k++)
-            {
-                slots[i++] = pile[k].ToByte();
-            }
-            for (; k < pile.FaceDownCount + 13; k++)
-            {
-                slots[i++] = 0;
-            }
-        }
-
-        // pack waste
-        {
-            var pile = solitaire.stockPile.waste;
-            int k = 0;
-            for (; k < pile.Count; k++)
-            {
-                slots[i++] = pile[k].ToByte();
-            }
-            for (; k < 24; k++)
-            {
-                slots[i++] = 0;
-            }
-        }
-        Debug.Log("Finished packing waste. byte offset: " + i);
-        // pack stock
-        {
-            var pile = solitaire.stockPile.stock;
-            int k = 0;
-            for (; k < pile.Count; k++)
-            {
-                slots[i++] = pile[k].ToByte();
-            }
-            for (; k < 24; k++)
-            {
-                slots[i++] = 0;
-            }
-        }
-
-        return slots;
+        return new PackedSolitaire(solitaire).data.ToArray();
     }
 }
 
@@ -403,6 +443,8 @@ public class Solitaire
     CardMovement smartMoveCache;
 
     public List<CardMovement> moveHistory = new List<CardMovement>();
+    public Dictionary<Binary, HashSet<CardMovement>> visitedStates = new Dictionary<Binary, HashSet<CardMovement>>();
+    private PackedSolitaire packedState;
     public int RandomSeed { get; private set; }
 
     public Solitaire(int randomSeed)
@@ -440,6 +482,8 @@ public class Solitaire
                 yield return move;
             }
         }
+        packedState = new PackedSolitaire(this);
+        visitedStates.Add(packedState.data, new HashSet<CardMovement>());
     }
 
     public List<CardMovement> DealAll()
@@ -470,11 +514,11 @@ public class Solitaire
     {
         Debug.Log("Checking possible moves for " + locatedCard.Card.ToString() + " at " + locatedCard.Location);
         List<CardMovement> moves = new List<CardMovement>();
-        if (locatedCard.Location.PileType == PileType.STOCK)
+        if (locatedCard.Location.pileType == PileType.STOCK)
         {
             moves.Add(new CardMovement(locatedCard, stockPile.waste.GetDropCardLocation()));
         }
-        else if (locatedCard.Location.FaceUp)
+        else if (locatedCard.Location.faceUp)
         {
             foreach (var pile in tableauPiles)
             {
@@ -485,11 +529,11 @@ public class Solitaire
                 }
             }
             bool maybeFoundation = true;
-            if (locatedCard.Location.PileType == PileType.FOUNDATION)
+            if (locatedCard.Location.pileType == PileType.FOUNDATION)
             {
                 maybeFoundation = false;
             }
-            if (locatedCard.Location.PileType == PileType.TABLEAU && tableauPiles[locatedCard.Location.PileIndex].GetNextCardLocation().Order - 1 != locatedCard.Location.Order)
+            if (locatedCard.Location.pileType == PileType.TABLEAU && tableauPiles[locatedCard.Location.pileIndex].GetNextCardLocation().order - 1 != locatedCard.Location.order)
             {
                 maybeFoundation = false;
             }
@@ -515,25 +559,25 @@ public class Solitaire
         // higher score means better move
 
         // it's always a good idea to move aces onto the foundation
-        if (move.Card.Rank == Rank.ACE && move.Destination.PileType == PileType.FOUNDATION)
+        if (move.card.Rank == Rank.ACE && move.destination.pileType == PileType.FOUNDATION)
         {
             return 10;
         }
         // it's always good to uncover cards in the tableau
-        if (move.Source.PileType == PileType.TABLEAU && move.Source.Order > 0 && move.Source.Order == tableauPiles[move.Source.PileIndex].FaceDownCount)
+        if (move.source.pileType == PileType.TABLEAU && move.source.order > 0 && move.source.order == tableauPiles[move.source.pileIndex].FaceDownCount)
         {
             return 10;
         }
 
         // it's always good to move a card onto the tableau from the waste if it allows a new card to be uncovered
-        if (move.Destination.PileType == PileType.TABLEAU && move.Source.PileType == PileType.WASTE)
+        if (move.destination.pileType == PileType.TABLEAU && move.source.pileType == PileType.WASTE)
         {
             foreach (var pile in tableauPiles)
             {
                 if (pile.Count > 0 && pile.FaceDownCount < pile.Count)
                 {
                     var faceUpCard = pile[pile.FaceDownCount];
-                    if (move.Card.Color != faceUpCard.Color && move.Card.Rank == faceUpCard.Rank + 1)
+                    if (move.card.Color != faceUpCard.Color && move.card.Rank == faceUpCard.Rank + 1)
                     {
                         return 9;
                     }
@@ -542,7 +586,7 @@ public class Solitaire
         }
 
         // it's typically good to move cards onto the foundation
-        if (move.Destination.PileType == PileType.FOUNDATION)
+        if (move.destination.pileType == PileType.FOUNDATION)
         {
             return 7;
         }
@@ -556,25 +600,25 @@ public class Solitaire
         if (numFaceDown == 0)
         {
             // it's useless to move cards around among the same type of pile
-            if (move.Source.PileType == move.Destination.PileType)
+            if (move.source.pileType == move.destination.pileType)
             {
                 return 0;
             }
             // It's useless to move cards off the foundation once all cards have been revealed
-            if (move.Source.PileType == PileType.FOUNDATION)
+            if (move.source.pileType == PileType.FOUNDATION)
             {
                 return 0;
             }
         }
 
         // it's useless to move aces off the foundation
-        if (move.Source.PileType == PileType.FOUNDATION && move.Card.Rank == Rank.ACE)
+        if (move.source.pileType == PileType.FOUNDATION && move.card.Rank == Rank.ACE)
         {
             return 0;
         }
 
         // it's useless to move kings in the tableau when they are already at order 0
-        if (move.Card.Rank == Rank.KING && move.Source.PileType == PileType.TABLEAU && move.Source.Order == 0 && move.Destination.PileType == PileType.TABLEAU)
+        if (move.card.Rank == Rank.KING && move.source.pileType == PileType.TABLEAU && move.source.order == 0 && move.destination.pileType == PileType.TABLEAU)
         {
             return 0;
         }
@@ -668,61 +712,61 @@ public class Solitaire
 
     public bool MaybePerformMove(CardMovement move)
     {
-        if (move.Type == MoveType.StockPileReset)
+        if (move.type == MoveType.StockPileReset)
         {
             stockPile.Reset();
             return true;
         }
-        else if (move.Source.PileType == PileType.STOCK)
+        else if (move.source.pileType == PileType.STOCK)
         {
             // you can only move from the stock to the waste
             var topCard = stockPile.stock.Pop();
             stockPile.waste.Add(topCard.Card);
             return true;
         }
-        else if (move.Source.PileType == PileType.WASTE)
+        else if (move.source.pileType == PileType.WASTE)
         {
-            if (move.Destination.PileType == PileType.TABLEAU)
+            if (move.destination.pileType == PileType.TABLEAU)
             {
                 stockPile.waste.Pop();
-                tableauPiles[move.Destination.PileIndex].PushFaceUp(move.Card);
+                tableauPiles[move.destination.pileIndex].PushFaceUp(move.card);
                 return true;
             }
-            if (move.Destination.PileType == PileType.FOUNDATION)
+            if (move.destination.pileType == PileType.FOUNDATION)
             {
                 stockPile.waste.Pop();
-                foundations[move.Destination.PileIndex].Push(move.Card);
+                foundations[move.destination.pileIndex].Push(move.card);
                 return true;
             }
         }
-        else if (move.Source.PileType == PileType.FOUNDATION)
+        else if (move.source.pileType == PileType.FOUNDATION)
         {
-            if (move.Destination.PileType == PileType.TABLEAU)
+            if (move.destination.pileType == PileType.TABLEAU)
             {
-                foundations[move.Source.PileIndex].Pop();
-                tableauPiles[move.Destination.PileIndex].PushFaceUp(move.Card);
+                foundations[move.source.pileIndex].Pop();
+                tableauPiles[move.destination.pileIndex].PushFaceUp(move.card);
                 return true;
             }
-            else if (move.Destination.PileType == PileType.FOUNDATION)
+            else if (move.destination.pileType == PileType.FOUNDATION)
             {
-                foundations[move.Source.PileIndex].Pop();
-                foundations[move.Destination.PileIndex].Push(move.Card);
+                foundations[move.source.pileIndex].Pop();
+                foundations[move.destination.pileIndex].Push(move.card);
                 return true;
             }
         }
-        else if (move.Source.PileType == PileType.TABLEAU)
+        else if (move.source.pileType == PileType.TABLEAU)
         {
-            if (move.Destination.PileType == PileType.FOUNDATION)
+            if (move.destination.pileType == PileType.FOUNDATION)
             {
-                tableauPiles[move.Source.PileIndex].PopAllAfter(move.Source.Order);
-                foundations[move.Destination.PileIndex].Push(move.Card);
+                tableauPiles[move.source.pileIndex].PopAllAfter(move.source.order);
+                foundations[move.destination.pileIndex].Push(move.card);
                 return true;
 
             }
-            else if (move.Destination.PileType == PileType.TABLEAU)
+            else if (move.destination.pileType == PileType.TABLEAU)
             {
-                (var cards, var flippedCard) = tableauPiles[move.Source.PileIndex].PopAllAfter(move.Source.Order);
-                tableauPiles[move.Destination.PileIndex].PushAllOnto(cards);
+                (var cards, var flippedCard) = tableauPiles[move.source.pileIndex].PopAllAfter(move.source.order);
+                tableauPiles[move.destination.pileIndex].PushAllOnto(cards);
                 return true;
             }
         }
@@ -731,6 +775,29 @@ public class Solitaire
 
     public bool PerformMove(CardMovement move)
     {
+        Debug.Log("Moving from state: " + packedState.data);
+        HashSet<CardMovement> previouslyAttemptedMoves;
+        if (visitedStates.TryGetValue(packedState.data, out previouslyAttemptedMoves))
+        {
+            Debug.Log("Found " + previouslyAttemptedMoves.Count + " previous moves from here.");
+        }
+        else
+        {
+            Debug.Log("No previous moves have been made from here");
+            previouslyAttemptedMoves = new HashSet<CardMovement>();
+            visitedStates.Add(packedState.data, previouslyAttemptedMoves);
+        }
+
+        Debug.Log("Searching for " + move + " in previously attempted moves");
+        if (previouslyAttemptedMoves.Contains(move))
+        {
+            Debug.LogWarning("This move was previously attempted " + move);
+        }
+        else
+        {
+            Debug.Log("This move has not been done before");
+        }
+
         bool success = MaybePerformMove(move);
         if (success)
         {
@@ -738,6 +805,12 @@ public class Solitaire
             randomMoveCache = null;
             smartMoveCache = null;
             moveHistory.Add(move);
+            previouslyAttemptedMoves.Add(move);
+            packedState = new PackedSolitaire(this);
+            if (!visitedStates.ContainsKey(packedState.data))
+            {
+                visitedStates.Add(packedState.data, new HashSet<CardMovement>());
+            }
         }
         else
         {

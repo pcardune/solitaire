@@ -20,8 +20,8 @@ public class MoveLineBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var start = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(ScoredMove.Move.Source) + new Vector3(0, 0, -1);
-        var end = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(ScoredMove.Move.Destination) + new Vector3(0, 0, -1);
+        var start = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(ScoredMove.Move.source) + new Vector3(0, 0, -1);
+        var end = SolitaireGameBehaviour.Instance.GetPositionForCardLocation(ScoredMove.Move.destination) + new Vector3(0, 0, -1);
         arrow.StartPos = start;
         arrow.EndPos = end;
         if (Highlight)

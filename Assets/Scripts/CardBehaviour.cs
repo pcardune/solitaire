@@ -96,7 +96,7 @@ public class CardBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (cardLocation.FaceUp)
+        if (cardLocation.faceUp)
         {
             spriteRenderer.sprite = CardSpriteManager.Load().GetSpriteForCard(card);
         }
