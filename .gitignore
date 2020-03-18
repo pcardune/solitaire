@@ -60,3 +60,7 @@ crashlytics-build.properties
 
 # Mac OS crap
 .DS_Store
+profiling/03-CanPushCardOntoPile.data
+profiling/03-CanPushCardOntoPile-2.data
+profiling/02-PerformMove.data
+profiling/01-GetPossibleMovesForCard.data
