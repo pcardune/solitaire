@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
@@ -332,12 +332,18 @@ public class SolitaireGameBehaviour : MonoBehaviour
             {
                 if (moveQueue.Count > 0)
                 {
-                    var nextMove = moveQueue.Dequeue();
-                    AnimateMove(nextMove);
+                    AnimateMove(moveQueue.Dequeue());
                 }
-                else if (AutoPlay && solitaire.moveHistory.Count < MaxAutoPlayMoves)
+                else if (AutoPlay)
                 {
-                    MakeAutoPlayMove();
+                    if (solitaire.moveHistory.Count < MaxAutoPlayMoves)
+                    {
+                        MakeAutoPlayMove();
+                    }
+                    else
+                    {
+                        AutoPlay = false;
+                    }
                 }
             }
         }
@@ -424,6 +430,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void MakeAutoPlayMove()
     {
+        // bool success;
+        // var moves = solitaire.PerformSmartMoves(random, MaxAutoPlayMoves, out success);
+        // MoveAllCardsToCurrentLocation();
+
         var move = solitaire.GetSmartMove(random);
         Debug.Log("Performing smart move: " + move);
         PerformAndAnimateMove(move);

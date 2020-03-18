@@ -512,7 +512,7 @@ public class Solitaire
 
     public List<CardMovement> GetPossibleMovesForCard(LocatedCard locatedCard)
     {
-        Debug.Log("Checking possible moves for " + locatedCard.Card.ToString() + " at " + locatedCard.Location);
+        // Debug.Log("Checking possible moves for " + locatedCard.Card.ToString() + " at " + locatedCard.Location);
         List<CardMovement> moves = new List<CardMovement>();
         if (locatedCard.Location.pileType == PileType.STOCK)
         {
@@ -550,7 +550,7 @@ public class Solitaire
             }
 
         }
-        Debug.Log("  ---> Found " + moves.Count + " possible moves for " + locatedCard.Card);
+        // Debug.Log("  ---> Found " + moves.Count + " possible moves for " + locatedCard.Card);
         return moves;
     }
 
@@ -775,27 +775,27 @@ public class Solitaire
 
     public bool PerformMove(CardMovement move)
     {
-        Debug.Log("Moving from state: " + packedState.data);
+        // Debug.Log("Moving from state: " + packedState.data);
         HashSet<CardMovement> previouslyAttemptedMoves;
         if (visitedStates.TryGetValue(packedState.data, out previouslyAttemptedMoves))
         {
-            Debug.Log("Found " + previouslyAttemptedMoves.Count + " previous moves from here.");
+            // Debug.Log("Found " + previouslyAttemptedMoves.Count + " previous moves from here.");
         }
         else
         {
-            Debug.Log("No previous moves have been made from here");
+            // Debug.Log("No previous moves have been made from here");
             previouslyAttemptedMoves = new HashSet<CardMovement>();
             visitedStates.Add(packedState.data, previouslyAttemptedMoves);
         }
 
-        Debug.Log("Searching for " + move + " in previously attempted moves");
+        // Debug.Log("Searching for " + move + " in previously attempted moves");
         if (previouslyAttemptedMoves.Contains(move))
         {
-            Debug.LogWarning("This move was previously attempted " + move);
+            // Debug.LogWarning("This move was previously attempted " + move);
         }
         else
         {
-            Debug.Log("This move has not been done before");
+            // Debug.Log("This move has not been done before");
         }
 
         bool success = MaybePerformMove(move);
@@ -814,11 +814,28 @@ public class Solitaire
         }
         else
         {
-            Debug.LogWarning("Failed to perform move " + move);
+            // Debug.LogWarning("Failed to perform move " + move);
         }
         return success;
     }
 
+    public IEnumerable<CardMovement> PerformSmartMoves(System.Random random, int numMovesToPerform, out bool success)
+    {
+        Debug.unityLogger.logEnabled = false;
+        var moves = new List<CardMovement>();
+        success = true;
+        for (int i = 0; i < numMovesToPerform && success && !IsGameOver(); i++)
+        {
+            var move = GetSmartMove(random);
+            success = PerformMove(move);
+            if (success)
+            {
+                moves.Add(move);
+            }
+        }
+        Debug.unityLogger.logEnabled = true;
+        return moves;
+    }
 
     public SolitaireJSON ToJSON()
     {
