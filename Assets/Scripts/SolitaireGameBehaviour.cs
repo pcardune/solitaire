@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,6 +22,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public CardTarget cardTargetPrefab;
     public GameObject lineRendererPrefab;
     public Solitaire solitaire { get; private set; }
+    public float cardAnimationSpeed = 0.1f;
 
     public Text winText;
 

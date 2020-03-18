@@ -50,7 +50,7 @@ public class MoveBehaviour : MonoBehaviour
     public void MoveTo(Vector3 position, bool playSound = true)
     {
         Debug.Log("Moving " + gameObject.name + " to " + position);
-        timeRemaining = .1f;
+        timeRemaining = SolitaireGameBehaviour.Instance.cardAnimationSpeed;
         targetPosition = position;
         enabled = true;
         if (playSound && cardAudios.Count > 0)
