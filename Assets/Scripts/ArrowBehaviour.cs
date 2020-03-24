@@ -6,14 +6,17 @@ public class ArrowBehaviour : MonoBehaviour
 {
     public Vector3 StartPos = Vector3.zero;
     public Vector3 EndPos = Vector3.one;
+
     Transform Tip;
     Transform Line;
+    Transform Text;
     BoxCollider2D collider2D;
     // Start is called before the first frame update
     void Start()
     {
         Tip = transform.Find("Tip");
         Line = transform.Find("Line");
+        Text = transform.Find("Text");
         collider2D = GetComponent<BoxCollider2D>();
     }
 
@@ -27,6 +30,9 @@ public class ArrowBehaviour : MonoBehaviour
         Line.localScale = new Vector3(Line.localScale.x, length - Tip.localScale.y / 2, 1);
         Tip.position = EndPos;
         Line.rotation = Tip.rotation = transform.rotation = Quaternion.FromToRotation(Vector3.up, EndPos - StartPos);
+        Vector3 textPos = Vector3.Lerp(StartPos, EndPos, .5f);
+        textPos.z = -1.5f;
+        Text.position = textPos;
     }
 
     public void SetColor(Color color)

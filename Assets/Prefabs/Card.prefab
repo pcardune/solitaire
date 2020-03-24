@@ -100,17 +100,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2eea779fb30b2e42ae11b98072b0a6b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  card:
-    Suit: 0
-    Color: 0
-    Rank: 0
-  cardLocation:
-    PileType: 0
-    PileIndex: 0
-    Order: 0
-    FaceUp: 0
-  solitaireGameBehaviour: {fileID: 0}
-  faceUp: 1
+  locatedCard:
+    Card:
+      Suit: 0
+      Color: 0
+      Rank: 0
+    Location:
+      pileType: 0
+      pileIndex: 0
+      order: 0
+      faceUp: 0
   dragDelay: 0.5
 --- !u!61 &8371582844676321223
 BoxCollider2D:

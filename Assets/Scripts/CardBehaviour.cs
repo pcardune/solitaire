@@ -55,13 +55,12 @@ public class CardSpriteManager
 [RequireComponent(typeof(DragBehaviour)), RequireComponent(typeof(MoveBehaviour))]
 public class CardBehaviour : MonoBehaviour
 {
-    public Card card;
 
-    public Location cardLocation;
+    public LocatedCard locatedCard;
 
-    public SolitaireGameBehaviour solitaireGameBehaviour;
+    public Card card { get { return locatedCard.Card; } }
 
-    public bool faceUp = true;
+    public Location cardLocation { get { return locatedCard.Location; } }
 
     public float dragDelay = 0.5f;
 
@@ -94,21 +93,10 @@ public class CardBehaviour : MonoBehaviour
         moveBehaviour = GetComponent<MoveBehaviour>();
     }
 
-    void Start()
-    {
-        SetFaceUp(faceUp);
-    }
-
     // Update is called once per frame
     void Update()
     {
-
-    }
-
-    public void SetFaceUp(bool isFaceUp)
-    {
-        faceUp = isFaceUp;
-        if (faceUp)
+        if (cardLocation.faceUp)
         {
             spriteRenderer.sprite = CardSpriteManager.Load().GetSpriteForCard(card);
         }
@@ -120,25 +108,25 @@ public class CardBehaviour : MonoBehaviour
 
     void OnMouseUpAsButton()
     {
-        solitaireGameBehaviour.OnClickCard(this);
+        SolitaireGameBehaviour.Instance.OnClickCard(this);
     }
 
     void OnMouseDown()
     {
-        solitaireGameBehaviour.OnMouseDownCard(this);
+        SolitaireGameBehaviour.Instance.OnMouseDownCard(this);
     }
 
     void OnMouseDrag()
     {
         if (dragBehaviour.DragDuration > 0.1f)
         {
-            solitaireGameBehaviour.OnMouseDragCard(this);
+            SolitaireGameBehaviour.Instance.OnMouseDragCard(this);
         }
     }
 
     void OnMouseUp()
     {
-        solitaireGameBehaviour.OnMouseUpCard(this);
+        SolitaireGameBehaviour.Instance.OnMouseUpCard(this);
     }
 
 }

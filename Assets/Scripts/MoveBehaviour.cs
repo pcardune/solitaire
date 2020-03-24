@@ -17,11 +17,10 @@ public class MoveBehaviour : MonoBehaviour
     {
         get
         {
-            return timeRemaining > 0;
+            return enabled;
         }
     }
     Vector3 targetPosition;
-    int targetSortingOrder;
     // Start is called before the first frame update
     public List<CardAudio> cardAudios;
 
@@ -48,12 +47,11 @@ public class MoveBehaviour : MonoBehaviour
         }
     }
 
-    public void MoveTo(Vector3 position, float aDuration, int sortingOrder, bool playSound = true)
+    public void MoveTo(Vector3 position, bool playSound = true)
     {
         Debug.Log("Moving " + gameObject.name + " to " + position);
-        timeRemaining = aDuration;
+        timeRemaining = SolitaireGameBehaviour.Instance.cardAnimationSpeed;
         targetPosition = position;
-        targetSortingOrder = sortingOrder;
         enabled = true;
         if (playSound && cardAudios.Count > 0)
         {
