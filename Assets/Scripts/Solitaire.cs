@@ -775,6 +775,10 @@ public class Solitaire
 
     public bool PerformMove(CardMovement move)
     {
+        if (packedState == null)
+        {
+            packedState = new PackedSolitaire(this);
+        }
         // Debug.Log("Moving from state: " + packedState.data);
         HashSet<CardMovement> previouslyAttemptedMoves;
         if (visitedStates.TryGetValue(packedState.data, out previouslyAttemptedMoves))
