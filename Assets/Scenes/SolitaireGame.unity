@@ -4378,10 +4378,10 @@ MonoBehaviour:
   CardDimensions: {x: 1.38, y: 1.88}
   CardSpacing: {x: 0.21, y: -0.36}
   FoundationPilePosition: {x: -4.76, y: 3.31, z: 0}
-  drawType: 1
+  drawType: 0
   AutoPlay: 0
   MaxAutoPlayMoves: 1000
-  useRandomSeed: 1
+  useRandomSeed: 0
   randomSeed: 2
   debugPossibleMoves: 0
   state: 0
