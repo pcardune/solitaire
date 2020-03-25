@@ -85,6 +85,13 @@ public enum MoveType
     StockPileReset,
 }
 
+// Keep track of how many cards should be drawn from the stock at a time.
+public enum DrawType
+{
+    SingleCardDraw,
+    ThreeCardDraw
+}
+
 public class ScoredMove
 {
     public int Score;
@@ -115,6 +122,8 @@ public class Solitaire
     public List<FoundationPile> foundations = new List<FoundationPile>();
     public List<TableauPile> tableauPiles = new List<TableauPile>();
 
+    public DrawType drawType = DrawType.SingleCardDraw;
+
     [NonSerialized]
     List<CardMovement> possibleMovesCache;
     [NonSerialized]
@@ -127,9 +136,10 @@ public class Solitaire
     private PackedSolitaire packedState;
     public int RandomSeed { get; private set; }
 
-    public Solitaire(int randomSeed)
+    public Solitaire(int randomSeed, DrawType drawType = DrawType.SingleCardDraw)
     {
         RandomSeed = randomSeed;
+        this.drawType = drawType;
         stockPile = new StockAndWastePile(RandomSeed);
         for (int i = 0; i < 4; i++)
         {
@@ -402,6 +412,13 @@ public class Solitaire
             // you can only move from the stock to the waste
             var topCard = stockPile.stock.Pop();
             stockPile.waste.Add(topCard.Card);
+            if (drawType == DrawType.ThreeCardDraw)
+            {
+                for (int i = 0; i < 2 && stockPile.stock.Count > 0; i++)
+                {
+                    stockPile.waste.Add(stockPile.stock.Pop().Card);
+                }
+            }
             return true;
         }
         else if (move.source.pileType == PileType.WASTE)
