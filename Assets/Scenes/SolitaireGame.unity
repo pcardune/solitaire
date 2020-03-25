@@ -2799,12 +2799,14 @@ MonoBehaviour:
     type: 3}
   lineRendererPrefab: {fileID: 8219201696645898152, guid: b585b55bad5596245842de7d6fbebc22,
     type: 3}
+  cardAnimationSpeed: 0.1
   winText: {fileID: 979521367}
   TableauPosition: {x: -4.77, y: 1.08, z: 0}
   StockPilePosition: {x: 4.73, y: 3.28, z: 0}
   CardDimensions: {x: 1.38, y: 1.88}
   CardSpacing: {x: 0.21, y: -0.36}
   FoundationPilePosition: {x: -4.76, y: 3.31, z: 0}
+  drawType: 1
   AutoPlay: 0
   MaxAutoPlayMoves: 1000
   useRandomSeed: 1

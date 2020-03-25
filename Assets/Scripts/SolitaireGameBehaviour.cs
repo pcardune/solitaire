@@ -31,6 +31,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public Vector2 CardDimensions;
     public Vector2 CardSpacing;
     public Vector3 FoundationPilePosition;
+    public DrawType drawType = DrawType.SingleCardDraw;
 
     public float GameDuration { get; private set; }
 
@@ -88,7 +89,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         Application.targetFrameRate = 60;
         random = new System.Random(RandomSeedToUse);
-        solitaire = new Solitaire(RandomSeedToUse);
+        solitaire = new Solitaire(RandomSeedToUse, drawType);
         GameDuration = 0;
         int i = 0;
         foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
@@ -106,7 +107,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public void NewGame()
     {
         random = new System.Random(RandomSeedToUse);
-        solitaire = new Solitaire(RandomSeedToUse);
+        solitaire = new Solitaire(RandomSeedToUse, drawType);
         GameDuration = 0;
         MoveAllCardsToCurrentLocation();
         Validate();
@@ -130,7 +131,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void UndoMove()
     {
-        var undone = new Solitaire(solitaire.RandomSeed);
+        var undone = new Solitaire(solitaire.RandomSeed, drawType);
         undone.DealAll();
         for (int i = 0; i < solitaire.moveHistory.Count - 1; i++)
         {
@@ -176,6 +177,19 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             pos.y = StockPilePosition.y;
             pos.x = StockPilePosition.x - CardDimensions.x - CardSpacing.x;
+            if (drawType == DrawType.ThreeCardDraw)
+            {
+                var topIndex = solitaire == null ? 0 : solitaire.stockPile.waste.Count - 1;
+                var rightMostPos = pos.x;
+                if (location.order > topIndex - 3)
+                {
+                    pos.x = rightMostPos - CardSpacing.x * 2 * (topIndex - location.order);
+                }
+                else
+                {
+                    pos.x = rightMostPos - CardSpacing.x * 2 * 2;
+                }
+            }
         }
         else if (location.pileType == PileType.STOCK)
         {
@@ -237,6 +251,20 @@ public class SolitaireGameBehaviour : MonoBehaviour
             cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.destination));
             cardBeingMoved.locatedCard = new LocatedCard(move.card, move.destination);
 
+            if (move.source.pileType == PileType.STOCK)
+            {
+                if (solitaire.drawType == DrawType.ThreeCardDraw)
+                {
+                    // update the locations of the other cards that were drawn
+                    foreach (var locatedCard in solitaire.stockPile.waste.LocatedCards())
+                    {
+                        cardBeingMoved = cardsById[locatedCard.Card.Id];
+                        cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
+                        cardBeingMoved.locatedCard = locatedCard;
+                    }
+                }
+            }
+
             // Update parents of all the cards in the destination pile
             // so that they get dragged appropriately
             if (move.destination.pileType == PileType.TABLEAU)
@@ -271,6 +299,11 @@ public class SolitaireGameBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (solitaire != null)
+        {
+            solitaire.drawType = drawType;
+        }
+
         CardBehaviour justFinishedMovingCard = null;
         if (cardBeingMoved != null && !cardBeingMoved.Move.IsMoving)
         {
