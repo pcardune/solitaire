@@ -104,6 +104,12 @@ public class SolitaireGameBehaviour : MonoBehaviour
         Validate();
     }
 
+    public void OnDrawTypeValueChanged(Dropdown change)
+    {
+        drawType = (DrawType)change.value;
+        solitaire.drawType = drawType;
+    }
+
     public void NewGame()
     {
         random = new System.Random(RandomSeedToUse);
