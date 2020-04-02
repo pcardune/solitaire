@@ -398,10 +398,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
             if (moves.Count > 0 && cardBehaviour.Drag.DragDuration < 0.5f)
             {
                 move = moves[0];
-                var maxScore = solitaire.GetScoreForMove(move);
+                var maxScore = MoveSelector.GetScoreForMove(solitaire, move);
                 for (int i = 0; i < moves.Count; i++)
                 {
-                    var score = solitaire.GetScoreForMove(moves[i]);
+                    var score = MoveSelector.GetScoreForMove(solitaire, move);
                     if (score > maxScore)
                     {
                         maxScore = score;
@@ -473,7 +473,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         // var moves = solitaire.PerformSmartMoves(random, MaxAutoPlayMoves, out success);
         // MoveAllCardsToCurrentLocation();
 
-        var move = solitaire.GetSmartMove(random);
+        var move = new MoveSelector(random).GetMove(solitaire);
         Debug.Log("Performing smart move: " + move);
         PerformAndAnimateMove(move);
     }
@@ -501,10 +501,10 @@ public class SolitaireGameBehaviour : MonoBehaviour
         if (debugPossibleMoves)
         {
             // var moves = solitaire.GetAllPossibleMoves();
-            var randomMove = solitaire.GetSmartMove(random);
+            var randomMove = new MoveSelector(random).GetMove(solitaire);
 
             var lineIndex = 0;
-            foreach (var scoredMove in solitaire.GetScoredMoves())
+            foreach (var scoredMove in MoveSelector.GetScoredMoves(solitaire))
             {
                 MoveLineBehaviour line;
                 if (lineIndex < possibleMoveLines.Count - 1)

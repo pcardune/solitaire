@@ -55,7 +55,7 @@ public class GameGraphTraverser : MonoBehaviour
             {
                 var solitaire = Solitaire.FromBytes(ggNode.gameBytes);
                 int moveIndex = 0;
-                foreach (var move in solitaire.GetScoredMoves())
+                foreach (var move in MoveSelector.GetScoredMoves(solitaire))
                 {
                     var s = Solitaire.FromBytes(ggNode.gameBytes);
                     s.PerformMove(move.Move);

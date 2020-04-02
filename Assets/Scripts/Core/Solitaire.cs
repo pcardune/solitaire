@@ -128,8 +128,6 @@ public class Solitaire
     List<CardMovement> possibleMovesCache;
     [NonSerialized]
     CardMovement randomMoveCache;
-    [NonSerialized]
-    CardMovement smartMoveCache;
 
     public List<CardMovement> moveHistory = new List<CardMovement>();
     public Dictionary<Binary, HashSet<CardMovement>> visitedStates = new Dictionary<Binary, HashSet<CardMovement>>();
@@ -244,78 +242,6 @@ public class Solitaire
         return moves;
     }
 
-    public int GetScoreForMove(CardMovement move)
-    {
-        // higher score means better move
-
-        // it's always a good idea to move aces onto the foundation
-        if (move.card.Rank == Rank.ACE && move.destination.pileType == PileType.FOUNDATION)
-        {
-            return 10;
-        }
-        // it's always good to uncover cards in the tableau
-        if (move.source.pileType == PileType.TABLEAU && move.source.order > 0 && move.source.order == tableauPiles[move.source.pileIndex].FaceDownCount)
-        {
-            return 10;
-        }
-
-        // it's always good to move a card onto the tableau from the waste if it allows a new card to be uncovered
-        if (move.destination.pileType == PileType.TABLEAU && move.source.pileType == PileType.WASTE)
-        {
-            foreach (var pile in tableauPiles)
-            {
-                if (pile.Count > 0 && pile.FaceDownCount < pile.Count)
-                {
-                    var faceUpCard = pile[pile.FaceDownCount];
-                    if (move.card.Color != faceUpCard.Color && move.card.Rank == faceUpCard.Rank + 1)
-                    {
-                        return 9;
-                    }
-                }
-            }
-        }
-
-        // it's typically good to move cards onto the foundation
-        if (move.destination.pileType == PileType.FOUNDATION)
-        {
-            return 7;
-        }
-
-        var numFaceDown = 0;
-        foreach (var pile in tableauPiles)
-        {
-            numFaceDown += pile.FaceDownCount;
-        }
-        // once all cards have been revealed
-        if (numFaceDown == 0)
-        {
-            // it's useless to move cards around among the same type of pile
-            if (move.source.pileType == move.destination.pileType)
-            {
-                return 0;
-            }
-            // It's useless to move cards off the foundation once all cards have been revealed
-            if (move.source.pileType == PileType.FOUNDATION)
-            {
-                return 0;
-            }
-        }
-
-        // it's useless to move aces off the foundation
-        if (move.source.pileType == PileType.FOUNDATION && move.card.Rank == Rank.ACE)
-        {
-            return 0;
-        }
-
-        // it's useless to move kings in the tableau when they are already at order 0
-        if (move.card.Rank == Rank.KING && move.source.pileType == PileType.TABLEAU && move.source.order == 0 && move.destination.pileType == PileType.TABLEAU)
-        {
-            return 0;
-        }
-
-        return 1;
-    }
-
     public List<CardMovement> GetAllPossibleMoves()
     {
         if (possibleMovesCache == null)
@@ -352,15 +278,6 @@ public class Solitaire
         return possibleMovesCache;
     }
 
-    public IEnumerable<ScoredMove> GetScoredMoves()
-    {
-        var moves = GetAllPossibleMoves();
-        foreach (var move in moves)
-        {
-            yield return new ScoredMove(move, GetScoreForMove(move));
-        }
-    }
-
     public CardMovement GetRandomMove(System.Random random)
     {
         if (randomMoveCache == null)
@@ -369,35 +286,6 @@ public class Solitaire
             randomMoveCache = moves[random.Next(0, moves.Count)];
         }
         return randomMoveCache;
-    }
-
-    public CardMovement GetSmartMove(System.Random random)
-    {
-        if (smartMoveCache == null)
-        {
-            List<ScoredMove> movesToConsider = new List<ScoredMove>();
-            var moves = GetScoredMoves();
-            ScoredMove bestMove = null;
-            foreach (var scoredMove in moves)
-            {
-                if (bestMove == null)
-                {
-                    bestMove = scoredMove;
-                }
-                if (scoredMove.Score > bestMove.Score)
-                {
-                    bestMove = scoredMove;
-                    movesToConsider.Clear();
-                }
-                if (scoredMove.Score == bestMove.Score)
-                {
-                    movesToConsider.Add(scoredMove);
-                }
-            }
-            smartMoveCache = movesToConsider[random.Next(0, movesToConsider.Count)].Move;
-        }
-        return smartMoveCache;
-
     }
 
     public bool MaybePerformMove(CardMovement move)
@@ -504,7 +392,6 @@ public class Solitaire
         {
             possibleMovesCache = null;
             randomMoveCache = null;
-            smartMoveCache = null;
             moveHistory.Add(move);
             previouslyAttemptedMoves.Add(move);
             packedState = new PackedSolitaire(this);
@@ -520,14 +407,14 @@ public class Solitaire
         return success;
     }
 
-    public IEnumerable<CardMovement> PerformSmartMoves(System.Random random, int numMovesToPerform, out bool success)
+    public IEnumerable<CardMovement> PerformSmartMoves(IMoveSelector moveSelector, int numMovesToPerform, out bool success)
     {
         Debug.unityLogger.logEnabled = false;
         var moves = new List<CardMovement>();
         success = true;
         for (int i = 0; i < numMovesToPerform && success && !IsGameOver(); i++)
         {
-            var move = GetSmartMove(random);
+            var move = moveSelector.GetMove(this);
             success = PerformMove(move);
             if (success)
             {

@@ -49,7 +49,7 @@ public class AITester : MonoBehaviour
         var s = new Solitaire(randomSeed++);
         s.DealAll();
         bool success;
-        s.PerformSmartMoves(new System.Random(1), numMovesBeforeGivingUp, out success);
+        s.PerformSmartMoves(new MoveSelector(1), numMovesBeforeGivingUp, out success);
         int numMoves = s.moveHistory.Count;
         Debug.Log("Finished game " + s.RandomSeed + ": " + numMoves + " moves");
 
