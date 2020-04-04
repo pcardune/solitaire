@@ -26,11 +26,11 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public Text winText;
 
-    public Vector3 TableauPosition;
-    public Vector3 StockPilePosition;
+    public Transform TableauPosition;
+    public Transform StockPilePosition;
+    public Transform FoundationPilePosition;
     public Vector2 CardDimensions;
     public Vector2 CardSpacing;
-    public Vector3 FoundationPilePosition;
     public DrawType drawType = DrawType.SingleCardDraw;
 
     public float GameDuration { get; private set; }
@@ -94,9 +94,9 @@ public class SolitaireGameBehaviour : MonoBehaviour
         int i = 0;
         foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
         {
-            CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab);
+            CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab, transform);
             cardGameObject.locatedCard = locatedCard;
-            cardGameObject.transform.position = GetPositionForCardLocation(locatedCard.Location);
+            cardGameObject.transform.localPosition = GetPositionForCardLocation(locatedCard.Location);
             cardGameObject.name = locatedCard.Card.ToString();
             cardsById[locatedCard.Card.Id] = cardGameObject;
             i++;
@@ -128,7 +128,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
             var cardGameObject = cardsById[locatedCard.Card.Id];
             if (!cardGameObject.locatedCard.Equals(locatedCard))
             {
-                cardGameObject.transform.parent = null;
+                cardGameObject.transform.parent = transform;
                 cardGameObject.locatedCard = locatedCard;
                 cardGameObject.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
             }
@@ -173,16 +173,13 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public Vector3 GetPositionForCardLocation(Location location)
     {
         Vector3 pos = Vector3.zero;
-        pos.z = 0 - location.order * .01f;
         if (location.pileType == PileType.TABLEAU)
         {
-            pos.y = TableauPosition.y + location.order * CardSpacing.y;
-            pos.x = TableauPosition.x + location.pileIndex * (CardDimensions.x + CardSpacing.x);
+            pos = TableauPosition.localPosition + new Vector3(location.pileIndex * (CardDimensions.x + CardSpacing.x), location.order * CardSpacing.y);
         }
         else if (location.pileType == PileType.WASTE)
         {
-            pos.y = StockPilePosition.y;
-            pos.x = StockPilePosition.x - CardDimensions.x - CardSpacing.x;
+            pos = StockPilePosition.localPosition + Vector3.right * (-CardDimensions.x - CardSpacing.x);
             if (drawType == DrawType.ThreeCardDraw)
             {
                 var topIndex = solitaire == null ? 0 : solitaire.stockPile.waste.Count - 1;
@@ -199,15 +196,23 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
         else if (location.pileType == PileType.STOCK)
         {
-            pos.y = StockPilePosition.y;
-            pos.x = StockPilePosition.x;
+            pos = StockPilePosition.localPosition;
         }
         else if (location.pileType == PileType.FOUNDATION)
         {
-            pos.y = FoundationPilePosition.y;
-            pos.x = FoundationPilePosition.x + location.pileIndex * (CardDimensions.x + CardSpacing.x);
+            pos = FoundationPilePosition.localPosition + Vector3.right * location.pileIndex * (CardDimensions.x + CardSpacing.x);
         }
+        pos.z = 0 - location.order * .01f;
         return pos;
+    }
+
+    void DrawCardGizmo(Location cardLocation)
+    {
+        var pos = GetPositionForCardLocation(cardLocation);
+        Gizmos.DrawWireCube(
+            transform.TransformPoint(pos),
+            new Vector3(CardDimensions.x, CardDimensions.y, CardDimensions.y)
+        );
     }
 
     void OnDrawGizmos()
@@ -217,14 +222,14 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             for (int j = 0; j < i + 1; j++)
             {
-                Gizmos.DrawWireCube(GetPositionForCardLocation(new Location(PileType.TABLEAU, i, j, false)), CardDimensions);
+                DrawCardGizmo(new Location(PileType.TABLEAU, i, j, false));
             }
         }
-        Gizmos.DrawWireCube(GetPositionForCardLocation(new Location(PileType.STOCK, 0, 0, false)), CardDimensions);
-        Gizmos.DrawWireCube(GetPositionForCardLocation(new Location(PileType.WASTE, 0, 0, false)), CardDimensions);
+        DrawCardGizmo(new Location(PileType.STOCK, 0, 0, false));
+        DrawCardGizmo(new Location(PileType.WASTE, 0, 0, false));
         for (int i = 0; i < 4; i++)
         {
-            Gizmos.DrawWireCube(GetPositionForCardLocation(new Location(PileType.FOUNDATION, i, 0, false)), CardDimensions);
+            DrawCardGizmo(new Location(PileType.FOUNDATION, i, 0, false));
         }
     }
 
@@ -253,7 +258,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         else if (move.type == MoveType.SingleCard)
         {
             cardBeingMoved = cardsById[move.card.Id];
-            cardBeingMoved.transform.parent = null;
+            cardBeingMoved.transform.parent = transform;
             cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.destination));
             cardBeingMoved.locatedCard = new LocatedCard(move.card, move.destination);
 

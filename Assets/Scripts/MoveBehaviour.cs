@@ -33,14 +33,14 @@ public class MoveBehaviour : MonoBehaviour
     {
         if (timeRemaining > 0)
         {
-            Vector3 delta = (targetPosition - transform.position) / (timeRemaining / Time.deltaTime);
-            var pos = transform.position + delta;
+            Vector3 delta = (targetPosition - transform.localPosition) / (timeRemaining / Time.deltaTime);
+            var pos = transform.localPosition + delta;
             pos.z = -.52f;
-            transform.position = pos;
+            transform.localPosition = pos;
             timeRemaining -= Time.deltaTime;
             if (timeRemaining <= 0)
             {
-                transform.position = targetPosition;
+                transform.localPosition = targetPosition;
                 enabled = false;
                 Debug.Log("Done moving " + gameObject.name);
             }
