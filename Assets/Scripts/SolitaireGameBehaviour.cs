@@ -96,7 +96,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab, transform);
             cardGameObject.locatedCard = locatedCard;
-            cardGameObject.transform.localPosition = GetPositionForCardLocation(locatedCard.Location);
+            cardGameObject.transform.position = GetPositionForCardLocation(locatedCard.Location);
             cardGameObject.name = locatedCard.Card.ToString();
             cardsById[locatedCard.Card.Id] = cardGameObject;
             i++;
@@ -203,14 +203,14 @@ public class SolitaireGameBehaviour : MonoBehaviour
             pos = FoundationPilePosition.localPosition + Vector3.right * location.pileIndex * (CardDimensions.x + CardSpacing.x);
         }
         pos.z = 0 - location.order * .01f;
-        return pos;
+        return transform.TransformPoint(pos);
     }
 
     void DrawCardGizmo(Location cardLocation)
     {
         var pos = GetPositionForCardLocation(cardLocation);
         Gizmos.DrawWireCube(
-            transform.TransformPoint(pos),
+            pos,
             new Vector3(CardDimensions.x, CardDimensions.y, CardDimensions.y)
         );
     }
@@ -445,11 +445,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
             var moves = solitaire.GetPossibleMovesForCard(cardBehaviour.locatedCard);
             foreach (var move in moves)
             {
-                var cardTarget = Instantiate(
-                    cardTargetPrefab,
-                    GetPositionForCardLocation(move.destination),
-                    Quaternion.identity
-                );
+                var cardTarget = Instantiate(cardTargetPrefab, transform);
+                cardTarget.transform.position = GetPositionForCardLocation(move.destination);
                 cardTarget.cardLocation = move.destination;
                 cardTargets.Add(cardTarget);
             }

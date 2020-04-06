@@ -14,6 +14,7 @@ public class DragBehaviour : MonoBehaviour
     public Color dragColor = new Color(1, 1, 1, .8f);
 
     private float _dragStartTime;
+    private Plane _plane;
 
     private bool _isDragging = false;
     public bool IsDragging
@@ -65,11 +66,22 @@ public class DragBehaviour : MonoBehaviour
 
     void OnMouseDown()
     {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        _plane = new Plane(transform.TransformPoint(Vector3.left), transform.TransformPoint(Vector3.right), transform.TransformPoint(Vector3.up));
         initialPosition = transform.position;
-        dragOffset = transform.position - mousePosition;
+        dragOffset = initialPosition - getMousePosition(_plane);
         originalColor = spriteRenderer.color;
         spriteRenderer.color = dragColor;
+    }
+
+    static Vector3 getMousePosition(Plane plane)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        float distance;
+        if (plane.Raycast(ray, out distance))
+        {
+            return ray.GetPoint(distance);
+        }
+        return Vector3.zero;
     }
 
     void OnMouseDrag()
@@ -79,10 +91,7 @@ public class DragBehaviour : MonoBehaviour
             IsDragging = true;
             _dragStartTime = Time.time;
         }
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        var position = mousePosition + dragOffset;
-        position.z = -1f;
-        transform.position = position;
+        transform.position = getMousePosition(_plane) + dragOffset;
     }
 
     void OnMouseUp()
