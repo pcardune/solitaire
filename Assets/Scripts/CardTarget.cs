@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(BoxCollider2D)), RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(BoxCollider)), RequireComponent(typeof(SpriteRenderer))]
 public class CardTarget : MonoBehaviour
 {
 
-    BoxCollider2D collider2D;
-    SpriteRenderer spriteRenderer;
     public Location cardLocation;
     Color initialColor;
 
@@ -18,31 +16,27 @@ public class CardTarget : MonoBehaviour
         get;
         private set;
     }
+
     void Awake()
     {
-        collider2D = GetComponent<BoxCollider2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        initialColor = spriteRenderer.color;
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        Debug.Log("Card target location: " + transform.position);
+        initialColor = GetComponent<SpriteRenderer>().color;
     }
 
-    // Update is called once per frame
+    void Start()
+    {
+    }
+
     void Update()
     {
-        Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        if (collider2D.OverlapPoint(mousePosition))
+        var spriteRenderer = GetComponent<SpriteRenderer>();
+        var collider = GetComponent<BoxCollider>();
+        if (collider.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out var hitInfo, 1000))
         {
-            // Debug.Log($"RED: mouse position is {mousePosition}. bounds are: {collider2D.bounds}");
             spriteRenderer.color = hoverColor;
             IsSelected = true;
         }
         else
         {
-            // Debug.Log($"GREEN: mouse position is {mousePosition}. bounds are: {collider2D.bounds}");
             spriteRenderer.color = initialColor;
             IsSelected = false;
         }
