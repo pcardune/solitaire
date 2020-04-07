@@ -69,8 +69,11 @@ public class DragBehaviour : MonoBehaviour
         _plane = new Plane(transform.TransformPoint(Vector3.left), transform.TransformPoint(Vector3.right), transform.TransformPoint(Vector3.up));
         initialPosition = transform.position;
         dragOffset = initialPosition - getMousePosition(_plane);
-        originalColor = spriteRenderer.color;
-        spriteRenderer.color = dragColor;
+        if (spriteRenderer != null)
+        {
+            originalColor = spriteRenderer.color;
+            spriteRenderer.color = dragColor;
+        }
     }
 
     static Vector3 getMousePosition(Plane plane)
@@ -97,7 +100,11 @@ public class DragBehaviour : MonoBehaviour
     void OnMouseUp()
     {
         IsDragging = false;
-        spriteRenderer.color = originalColor;
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = originalColor;
+        }
+
     }
 
     public void Reset()

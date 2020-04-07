@@ -8,6 +8,7 @@ public class CardSpriteManager
 {
     private static CardSpriteManager instance;
     private Dictionary<string, Sprite> cardFrontSprites = new Dictionary<string, Sprite>();
+    private Dictionary<string, Texture> cardFrontTextures = new Dictionary<string, Texture>();
     private Sprite backOfCardSprite;
     public static CardSpriteManager Load()
     {
@@ -28,9 +29,8 @@ public class CardSpriteManager
                 {
                     string path = "CardImages/card" + suit.Key + values[i];
                     Card card = new Card(suit.Value, i + 1);
-                    Sprite sprite = Resources.Load<Sprite>(path);
-                    // Debug.Log("Loaded sprite " + path + ": " + sprite);
-                    CardSpriteManager.instance.cardFrontSprites[card.ToString()] = sprite;
+                    instance.cardFrontSprites[card.ToString()] = Resources.Load<Sprite>(path);
+                    instance.cardFrontTextures[card.ToString()] = Resources.Load<Texture>(path);
                 }
             }
             CardSpriteManager.instance.backOfCardSprite = Resources.Load<Sprite>("CardImages/cardBack_red5");
@@ -38,12 +38,14 @@ public class CardSpriteManager
         return CardSpriteManager.instance;
     }
 
+    public Texture GetTextureForCard(Card card)
+    {
+        return cardFrontTextures[card.ToString()];
+    }
+
     public Sprite GetSpriteForCard(Card card)
     {
-        // Debug.Log("Looking up sprite for " + card.ToString());
-        Sprite sprite = cardFrontSprites[card.ToString()];
-        // Debug.Log("Got Sprite " + sprite);
-        return sprite;
+        return cardFrontSprites[card.ToString()];
     }
 
     public Sprite GetFaceDownSprite()
@@ -67,6 +69,7 @@ public class CardBehaviour : MonoBehaviour
     float dragStart;
 
     SpriteRenderer spriteRenderer;
+    MeshRenderer meshRenderer;
     DragBehaviour dragBehaviour;
     MoveBehaviour moveBehaviour;
 
@@ -91,18 +94,34 @@ public class CardBehaviour : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         dragBehaviour = GetComponent<DragBehaviour>();
         moveBehaviour = GetComponent<MoveBehaviour>();
+        meshRenderer = GetComponent<MeshRenderer>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (cardLocation.faceUp)
+        if (spriteRenderer != null)
         {
-            spriteRenderer.sprite = CardSpriteManager.Load().GetSpriteForCard(card);
+            if (cardLocation.faceUp)
+            {
+                spriteRenderer.sprite = CardSpriteManager.Load().GetSpriteForCard(card);
+            }
+            else
+            {
+                spriteRenderer.sprite = CardSpriteManager.Load().GetFaceDownSprite();
+            }
         }
-        else
+        if (meshRenderer != null)
         {
-            spriteRenderer.sprite = CardSpriteManager.Load().GetFaceDownSprite();
+            meshRenderer.materials[2].mainTexture = CardSpriteManager.Load().GetTextureForCard(card);
+            if (cardLocation.faceUp)
+            {
+                transform.localRotation = Quaternion.identity;
+            }
+            else
+            {
+                transform.localRotation = Quaternion.Euler(0, 180, 0);
+            }
         }
     }
 
