@@ -58,7 +58,27 @@ public class CardSpriteManager
 public class CardBehaviour : MonoBehaviour
 {
 
-    public LocatedCard locatedCard;
+    private LocatedCard _locatedCard;
+    public LocatedCard locatedCard
+    {
+        get
+        {
+            return _locatedCard;
+        }
+        set
+        {
+            if (_locatedCard.Location.faceUp != value.Location.faceUp && value.Location.faceUp)
+            {
+                var anim = GetComponentInChildren<Animator>();
+                if (anim)
+                {
+                    anim.speed = 1f / SolitaireGameBehaviour.Instance.cardAnimationSpeed;
+                    anim.Play("Card Flip");
+                }
+            }
+            _locatedCard = value;
+        }
+    }
 
     public Card card { get { return locatedCard.Card; } }
 
@@ -94,7 +114,8 @@ public class CardBehaviour : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         dragBehaviour = GetComponent<DragBehaviour>();
         moveBehaviour = GetComponent<MoveBehaviour>();
-        meshRenderer = GetComponent<MeshRenderer>();
+        // meshRenderer = GetComponent<MeshRenderer>();
+        meshRenderer = GetComponentInChildren<MeshRenderer>();
     }
 
     // Update is called once per frame

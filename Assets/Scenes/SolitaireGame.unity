@@ -4746,7 +4746,7 @@ MonoBehaviour:
     type: 3}
   lineRendererPrefab: {fileID: 8219201696645898152, guid: b585b55bad5596245842de7d6fbebc22,
     type: 3}
-  cardAnimationSpeed: 0.1
+  cardAnimationSpeed: 1
   winText: {fileID: 979521367}
   TableauPosition: {fileID: 1334918705}
   StockPilePosition: {fileID: 1541129725}

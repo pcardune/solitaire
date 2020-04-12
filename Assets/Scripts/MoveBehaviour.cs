@@ -35,7 +35,6 @@ public class MoveBehaviour : MonoBehaviour
         {
             Vector3 delta = (targetPosition - transform.position) / (timeRemaining / Time.deltaTime);
             var pos = transform.position + delta;
-            pos.z = -.52f;
             transform.position = pos;
             timeRemaining -= Time.deltaTime;
             if (timeRemaining <= 0)
