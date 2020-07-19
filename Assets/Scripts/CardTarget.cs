@@ -6,7 +6,7 @@ using UnityEngine;
 public class CardTarget : MonoBehaviour
 {
 
-    BoxCollider2D collider2D;
+    BoxCollider2D boxCollider2D;
     SpriteRenderer spriteRenderer;
     public Location cardLocation;
     Color initialColor;
@@ -20,7 +20,7 @@ public class CardTarget : MonoBehaviour
     }
     void Awake()
     {
-        collider2D = GetComponent<BoxCollider2D>();
+        boxCollider2D = GetComponent<BoxCollider2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         initialColor = spriteRenderer.color;
     }
@@ -34,7 +34,7 @@ public class CardTarget : MonoBehaviour
     void Update()
     {
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        if (collider2D.OverlapPoint(mousePosition))
+        if (GetComponent<Collider2D>().OverlapPoint(mousePosition))
         {
             // Debug.Log($"RED: mouse position is {mousePosition}. bounds are: {collider2D.bounds}");
             spriteRenderer.color = hoverColor;

@@ -14,7 +14,12 @@ public class AITester : MonoBehaviour
     public GameObject linePrefab;
     public GameObject maxMovesLine;
     public GameObject minMovesLine;
-    public Camera camera;
+    public new Camera camera;
+
+    void Awake()
+    {
+        camera = GetComponent<Camera>();
+    }
 
     // Start is called before the first frame update
     void Start()
