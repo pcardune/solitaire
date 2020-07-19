@@ -21,6 +21,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public CardBehaviour cardPrefab;
     public CardTarget cardTargetPrefab;
     public GameObject lineRendererPrefab;
+    public Canvas IntroScreenCanvas;
+    public Canvas GameCanvas;
     public Solitaire solitaire { get; private set; }
     public float cardAnimationSpeed = 0.1f;
 
@@ -79,9 +81,21 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public static SolitaireGameBehaviour Instance { get; private set; }
 
+    private GameObject CardSpace;
+    private Transform CardTopLevelTransform
+    {
+        get
+        {
+            // return GameCanvas.transform;
+            return CardSpace.transform;
+            // return null;
+        }
+    }
+
     void Awake()
     {
         SolitaireGameBehaviour.Instance = this;
+        CardSpace = new GameObject("CardSpace");
     }
 
     // Start is called before the first frame update
@@ -91,15 +105,14 @@ public class SolitaireGameBehaviour : MonoBehaviour
         random = new System.Random(RandomSeedToUse);
         solitaire = new Solitaire(RandomSeedToUse, drawType);
         GameDuration = 0;
-        int i = 0;
         foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
         {
-            CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab);
+            CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab, CardTopLevelTransform);
+            cardGameObject.GetComponent<Renderer>().enabled = false;
             cardGameObject.locatedCard = locatedCard;
             cardGameObject.transform.position = GetPositionForCardLocation(locatedCard.Location);
             cardGameObject.name = locatedCard.Card.ToString();
             cardsById[locatedCard.Card.Id] = cardGameObject;
-            i++;
         }
         Validate();
     }
@@ -112,12 +125,26 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void NewGame()
     {
+        IntroScreenCanvas.gameObject.SetActive(false);
+        GameCanvas.gameObject.SetActive(true);
         random = new System.Random(RandomSeedToUse);
         solitaire = new Solitaire(RandomSeedToUse, drawType);
         GameDuration = 0;
         MoveAllCardsToCurrentLocation();
         Validate();
         state = GameState.Resetting;
+    }
+
+    public void NewThreeCardDrawGame()
+    {
+        drawType = DrawType.ThreeCardDraw;
+        NewGame();
+    }
+
+    public void NewSingleCardDrawGame()
+    {
+        drawType = DrawType.SingleCardDraw;
+        NewGame();
     }
 
     private void MoveAllCardsToCurrentLocation()
@@ -128,7 +155,8 @@ public class SolitaireGameBehaviour : MonoBehaviour
             var cardGameObject = cardsById[locatedCard.Card.Id];
             if (!cardGameObject.locatedCard.Equals(locatedCard))
             {
-                cardGameObject.transform.parent = null;
+                cardGameObject.GetComponent<Renderer>().enabled = true;
+                cardGameObject.transform.parent = CardTopLevelTransform;
                 cardGameObject.locatedCard = locatedCard;
                 cardGameObject.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
             }
@@ -253,7 +281,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         else if (move.type == MoveType.SingleCard)
         {
             cardBeingMoved = cardsById[move.card.Id];
-            cardBeingMoved.transform.parent = null;
+            cardBeingMoved.transform.parent = CardTopLevelTransform;
             cardBeingMoved.Move.MoveTo(GetPositionForCardLocation(move.destination));
             cardBeingMoved.locatedCard = new LocatedCard(move.card, move.destination);
 
@@ -311,7 +339,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         }
 
         CardBehaviour justFinishedMovingCard = null;
-        if (cardBeingMoved != null && !cardBeingMoved.Move.IsMoving)
+        if (cardBeingMoved != null && cardBeingMoved.Move && !cardBeingMoved.Move.IsMoving)
         {
             justFinishedMovingCard = cardBeingMoved;
             cardBeingMoved = null;

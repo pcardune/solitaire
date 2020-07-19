@@ -82,7 +82,8 @@ public class CardBehaviour : MonoBehaviour
     {
         get
         {
-            return moveBehaviour;
+            // return moveBehaviour;
+            return GetComponent<MoveBehaviour>();
         }
     }
 
