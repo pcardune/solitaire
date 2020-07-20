@@ -21,6 +21,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public CardBehaviour cardPrefab;
     public CardTarget cardTargetPrefab;
     public GameObject lineRendererPrefab;
+    public StockPileEmpty stockPileEmptyPrefab;
     public Canvas IntroScreenCanvas;
     public Canvas GameCanvas;
     public Solitaire solitaire { get; private set; }
@@ -86,9 +87,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
     {
         get
         {
-            // return GameCanvas.transform;
             return CardSpace.transform;
-            // return null;
         }
     }
 
@@ -101,14 +100,18 @@ public class SolitaireGameBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        IntroScreenCanvas.gameObject.SetActive(false);
+        GameCanvas.gameObject.SetActive(true);
         Application.targetFrameRate = 60;
         random = new System.Random(RandomSeedToUse);
         solitaire = new Solitaire(RandomSeedToUse, drawType);
         GameDuration = 0;
+        StockPileEmpty stockPileEmpty = Instantiate<StockPileEmpty>(stockPileEmptyPrefab);
+        stockPileEmpty.name = "StockPileEmpty";
+        stockPileEmpty.transform.position = StockPilePosition + Vector3.forward;
         foreach (var locatedCard in solitaire.stockPile.stock.LocatedCards())
         {
             CardBehaviour cardGameObject = Instantiate<CardBehaviour>(cardPrefab, CardTopLevelTransform);
-            cardGameObject.GetComponent<Renderer>().enabled = false;
             cardGameObject.locatedCard = locatedCard;
             cardGameObject.transform.position = GetPositionForCardLocation(locatedCard.Location);
             cardGameObject.name = locatedCard.Card.ToString();
@@ -125,8 +128,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
 
     public void NewGame()
     {
-        IntroScreenCanvas.gameObject.SetActive(false);
-        GameCanvas.gameObject.SetActive(true);
         random = new System.Random(RandomSeedToUse);
         solitaire = new Solitaire(RandomSeedToUse, drawType);
         GameDuration = 0;
@@ -138,13 +139,13 @@ public class SolitaireGameBehaviour : MonoBehaviour
     public void NewThreeCardDrawGame()
     {
         drawType = DrawType.ThreeCardDraw;
-        NewGame();
+        enabled = true;
     }
 
     public void NewSingleCardDrawGame()
     {
         drawType = DrawType.SingleCardDraw;
-        NewGame();
+        enabled = true;
     }
 
     private void MoveAllCardsToCurrentLocation()
@@ -155,7 +156,6 @@ public class SolitaireGameBehaviour : MonoBehaviour
             var cardGameObject = cardsById[locatedCard.Card.Id];
             if (!cardGameObject.locatedCard.Equals(locatedCard))
             {
-                cardGameObject.GetComponent<Renderer>().enabled = true;
                 cardGameObject.transform.parent = CardTopLevelTransform;
                 cardGameObject.locatedCard = locatedCard;
                 cardGameObject.Move.MoveTo(GetPositionForCardLocation(locatedCard.Location));
