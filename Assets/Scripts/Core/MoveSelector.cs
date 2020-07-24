@@ -32,7 +32,7 @@ public class MoveSelector : IMoveSelector
         // it's always good to uncover cards in the tableau
         if (move.source.pileType == PileType.TABLEAU && move.source.order > 0 && move.source.order == solitaire.tableauPiles[move.source.pileIndex].FaceDownCount)
         {
-            return 10;
+            return 9;
         }
 
         // it's always good to move a card onto the tableau from the waste if it allows a new card to be uncovered
@@ -45,7 +45,7 @@ public class MoveSelector : IMoveSelector
                     var faceUpCard = pile[pile.FaceDownCount];
                     if (move.card.Color != faceUpCard.Color && move.card.Rank == faceUpCard.Rank + 1)
                     {
-                        return 9;
+                        return 8;
                     }
                 }
             }
