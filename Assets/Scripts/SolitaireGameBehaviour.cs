@@ -429,7 +429,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
                 var maxScore = MoveSelector.GetScoreForMove(solitaire, move);
                 for (int i = 0; i < moves.Count; i++)
                 {
-                    var score = MoveSelector.GetScoreForMove(solitaire, move);
+                    var score = MoveSelector.GetScoreForMove(solitaire, moves[i]);
                     if (score > maxScore)
                     {
                         maxScore = score;
@@ -443,6 +443,7 @@ public class SolitaireGameBehaviour : MonoBehaviour
         {
             move = new CardMovement(locatedCard, SelectedCardTarget.cardLocation);
         }
+
         if (move != null)
         {
             PerformAndAnimateMove(move);
