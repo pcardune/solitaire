@@ -131,6 +131,7 @@ public class Solitaire
 
     public List<CardMovement> moveHistory = new List<CardMovement>();
     public Dictionary<Binary, HashSet<CardMovement>> visitedStates = new Dictionary<Binary, HashSet<CardMovement>>();
+    [NonSerialized]
     private PackedSolitaire packedState;
     public int RandomSeed { get; private set; }
 
